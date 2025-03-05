@@ -160,8 +160,7 @@ export default function VideoDetail() {
             setIsPosted(false);
         } else {
             // ✅ 🔥 Firestore에 저장된 essay 최신값을 다시 가져옴
-            const updatedUserDocSnap = await getDoc(userDocRef);
-            const latestEssay = updatedUserDocSnap.data().essay || "작성된 내용이 없습니다.";
+
 
             // ✅ 게시: Firestore에 추가
             await addDoc(collection(db, "gallery"), {
