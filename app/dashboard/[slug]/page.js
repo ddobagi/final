@@ -33,11 +33,9 @@ export default function VideoDetail() {
             setUser(currentUser);
             setLoading(true);
             setUserEmail(currentUser.email);
-            console.log("로그인한 사용자 감지 ");
 
             try {
                 const userDocRef = doc(db, "users", currentUser.uid);
-                console.log("1번 uid 통과");
                 const userDocSnap = await getDoc(userDocRef);
                 const mode = userDocSnap.exists() && userDocSnap.data().Mode === "public";
 
@@ -100,7 +98,6 @@ export default function VideoDetail() {
             getDoc(doc(db, "gallery", slug, "likes", userId)),
             getDoc(doc(db, "users", userId))
           ]);
-          console.log("3번 uid 통과");
 
           setLiked(userLikeSnap.exists());
 
@@ -125,7 +122,6 @@ export default function VideoDetail() {
     try {
         const userId = auth.currentUser?.uid;
         if (!userId) {
-            console.log("정상 작동 중");
             return;
         }
 
