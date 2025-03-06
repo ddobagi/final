@@ -1,18 +1,33 @@
+// useState, useEffect 등 react hook은 클라이언트 사이드에서만 실행되므로, 클라이언트 컴포넌트임을 선언하는 것 
 "use client";
 
+// react hook
 import { useState, useEffect, useRef } from "react";
+
+// next.js 
 import { useRouter } from "next/navigation";
-import { auth, provider, db } from "@/lib/firebase";
-import { signInWithPopup, onAuthStateChanged, signOut } from "firebase/auth";
-import { query, orderBy, collection, onSnapshot, addDoc, deleteDoc, doc, getDoc, setDoc, serverTimestamp, writeBatch, where, getDocs } from "firebase/firestore";
 import Link from "next/link";
+
+// firebase 
+import { auth, db } from "@/lib/firebase";
+import { onAuthStateChanged, signOut } from "firebase/auth";
+import { query, orderBy, collection, onSnapshot, addDoc, doc, getDoc, setDoc, serverTimestamp, writeBatch, where, getDocs } from "firebase/firestore";
+
+// shadcn
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, X, Trash2, Search, ArrowLeft, LogOut, Heart  } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 
+// lucide-react 
+import { Plus, X, Trash2, Search, ArrowLeft, Heart  } from "lucide-react";
+
+// export default: 다른 곳에서 import 할 수 있게 함 (ex. import Dashboard from "./Dashboard")
+// 다른 곳에서 import 할 수 있는 함수형 컴포넌트를 정의 
 export default function Dashboard() {
+
+  // useState() : react에서 상태를 관리하는 hook 
+  // state 정보와 setter 함수가 배열[]로 정의됨 
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [videos, setVideos] = useState([]);
@@ -20,77 +35,124 @@ export default function Dashboard() {
   const [search, setSearch] = useState("");
   const [fabOpen, setFabOpen] = useState(false);
   const [isOn, setIsOn] = useState(false);
-  const fabRef = useRef(null);
-  const router = useRouter();
   const [userEmail, setUserEmail] = useState("");
-
   const [searchMode, setSearchMode] = useState(false);
 
+  // useRef(): 컴포넌트가 렌더링 되어도 값을 유지하는 참조 객체를 생성하는 hook 
+  const fabRef = useRef(null);
+
+  // useRouter(): 페이지 이동을 관리하는 hook 
+  const router = useRouter();
+
+  // vercel 환경 변수로 저장해둔 youtube api key
+  // 반드시 "NEXT_PUBLIC_~"가 붙어야 함 
   const API_KEY = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY;
 
-
-
+  // useEffect: 컴포넌트가 렌더링될 때 실행되는 react hook 
   useEffect(() => {
+
+    // onAuthStateChanged(auth, callback): 사용자의 로그인 상태 변경을 감지하는 firebase authentication의 이벤트 리스너 
     const unsubscribe = onAuthStateChanged(auth, async(currentUser) => {
+
+      // 현재 사용자와 현재 사용자의 이메일을, 각각 user와 userEmail로 설정 
       if (currentUser) {
         setUser(currentUser);
         setUserEmail(currentUser.email);
-        console.log("현재 사용자 감지");
-
 
         try {
-          const userDocRef = doc(db, "users", currentUser.uid);
-          const userDocSnap = await getDoc(userDocRef);
+          // 현재 사용자의 mode 데이터를 가져옴 
+          const userDocRef = doc(db, "users", currentUser.uid); // db 경로 정의
+          const userDocSnap = await getDoc(userDocRef); // 해당 db 경로의 문서 불러옴 
   
           if (userDocSnap.exists() && userDocSnap.data().Mode) {
-            setIsOn(userDocSnap.data().Mode === "public"); // ✅ Mode 값에 따라 isOn 설정
+            setIsOn(userDocSnap.data().Mode === "public"); // mode 값이 public이면, isOn은 true 
           } else {
-            setIsOn(false); // ✅ Mode 값이 없으면 기본값 설정
+            setIsOn(false); // mode 값이 false면 isOn은 false 
           }
         } catch (error) {
           console.error("사용자 Mode 데이터를 가져오는 중 오류 발생:", error);
           setIsOn(false); // 오류 발생 시 기본값 설정
         }
 
-
-        
+        // 현재 사용자 정보가 없다면 로그인하지 않았다는 의미이므로,
+        // 로그인 페이지로 이동 & userEmail도 초기화 
       } else {
         router.push("/");
         setUserEmail("")
       }
+
+      // 로그인 상태 파악을 마친 후, loading 마침 
       setLoading(false);
     });
+
+    // 간단히 표현하면
+    // useEffect (() => {
+    // const unsubcribe = onAuthStateChanged(auth, callback);
+    // return () => unsubscribe();
+    // }, []); 
+    // '컴포넌트가 rendering 되면, 정의한 unsubscribe 함수를 return하세요'인 것 + 이벤트 리스너 해제 
     return () => unsubscribe();
+
+  // 의존성 배열에 router 포함 -> router 값이 변경될 때마다 실행 
   }, [router]);
 
 
+  // useEffect: 컴포넌트가 렌더링될 때 실행되는 react hook 
   useEffect(() => {
+
+    // 로그인하지 않은 user는 이후 코드를 실행하지 않음 
     if (!user) return;
 
+    // 현재 user의 고유 ID 
     const userId = auth.currentUser?.uid;
 
+    // isOn 값에 따라 데이터를 불러올 db 경로를 설정 
     const collectionPath = isOn 
-    ? collection(db, "gallery")  // ✅ isOn이 true이면 "gallery" 컬렉션 사용
-    : collection(db, "users", userId, "videos");  // ✅ isOn이 false이면 사용자별 "videos" 컬렉션 사용
+    ? collection(db, "gallery")  // isOn: true -> gallery 컬렉션 사용
+    : collection(db, "users", userId, "videos");  // isOn: false -> users/videos 컬렉션 사용
 
+    // isOn 값에 따라 상이한 경로에서 데이터를 불러온 후,
+    // isOn 값에 따라 상이한 정렬 기준으로 데이터 정렬 
     const q = isOn
     ? query(collectionPath, orderBy("recommend", "desc"))
     : query(collectionPath, orderBy("createdAt", "desc"))
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      setVideos(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
+    // onSnapshot: firestore 데이터를 실시간으로 감지하는 이벤트 리스너 
+    // snapshot: firestore에서 가져온 쿼리 전체 결과
+    // snapshot.dpcs: 쿼리 전체 결과 중 문서(docs)
+    // .map(): 각 문서를 딕셔너리로 변환 
+    const unsubscribe = onSnapshot(q, (snapshot) => { 
+      setVideos(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))); 
     });
+
+    // 정의한 unsubscribe 함수를 return, 이벤트 리스너 해제 
     return () => unsubscribe();
+
+  // 의존성 배열에 user, isOn 포함 -> user나 isOn 값이 변경될 때마다 실행 
   }, [user, isOn]);
 
   useEffect(() => {
+
     function handleClickOutside(event) {
+
+      // 앞서 const fabRef = useRef(null); 로 정의
+      // useRef를 사용해 현재 사용자가 위치한(current) DOM 요소를 참조함 
+      // event.target: 사용자가 클릭한 요소 
+      // 사용자가 위치한 DOM요소가 사용자가 클릭한 요소를 포함하고 있지 않으면(사용자가 fab 버튼 외부를 클릭했으면)
+      // fabOpen 상태를 false, 즉 fab 버튼이 닫힌 상태로 설정 
       if (fabRef.current && !fabRef.current.contains(event.target)) {
         setFabOpen(false);
       }
     }
+
+    // "mousedown": 마우스 클릭을 감지하는 이벤트 리스너
+    // 마우스가 클릭되었을 때 handleClickOutside 함수를 실행함 (바로 위) 
     document.addEventListener("mousedown", handleClickOutside);
+
+    // 이벤트 리스너를 해제하며 return 
     return () => document.removeEventListener("mousedown", handleClickOutside);
+
+  // 의존성 배열이 비어있음 -> 컴포넌트가 최초 렌더링(마운트) 될 때 한 번만 실행되고, 이후 실행되지 않음
   }, []);
 
   const getYoutubeVideoDetails = async (url) => {
@@ -211,7 +273,7 @@ export default function Dashboard() {
       <div className="flex items-center justify-between max-w-[600px] w-full h-16 px-4 bg-transparent border border-gray-500 rounded text-white">
         {/* 왼쪽 아이콘 */}
         {searchMode ? (
-          <button onClick={() => setSearchMode(false)} className="text-black">
+          <button onClick={() => setSearchMode(false)} className="text-black cursor-pointor">
             <ArrowLeft size={24} />
           </button>
         ) : (
