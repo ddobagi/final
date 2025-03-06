@@ -155,38 +155,49 @@ export default function Dashboard() {
   // 의존성 배열이 비어있음 -> 컴포넌트가 최초 렌더링(마운트) 될 때 한 번만 실행되고, 이후 실행되지 않음
   }, []);
 
+  // youtube 영상들의 세부 정보를 youtube api를 이용해 가져옴, input: url 
   const getYoutubeVideoDetails = async (url) => {
     try {
-      // 유튜브 영상 ID 추출 정규식
+
+      // pattern과 url을 match (형식을 맞춰봄) 
       const pattern = /(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|embed|shorts)\/|.*[?&]v=)|youtu\.be\/)([^"&?/\s]+)/;
       const match = url.match(pattern);
   
-      // 영상 ID가 없으면 에러 처리
+      // 만약 match되지 않는다면 에러 메시지 출력 
       if (!match || !match[1]) throw new Error("유효한 YouTube 링크가 아닙니다.");
       
-      const videoId = match[1]; // 올바른 영상 ID 추출 
+      // 만약 match된다면 \/ 사이의 값(videID에 해당)을 videoId 변수에 저장 
+      const videoId = match[1];
   
-      // 📌 유튜브 영상 정보 가져오기
+      // videoId 값을 바탕으로, youtube api를 이용해 video 정보를 가져옴
+      // 이때 youtube api key를 발급받아 전달해야 하며, 불러온 video 정보는 json 파일로 저장 
       const videoResponse = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&id=${videoId}&key=${API_KEY}`);
       const videoData = await videoResponse.json();
-  
-      // 비디오 정보 확인
+
+      // video 정보가 담긴 json 파일(A)에서, 'item' key에 해당하는 value가 존재하는지 확인하기 
       if (!videoData.items || videoData.items.length === 0) throw new Error("비디오 정보를 가져올 수 없습니다.");
       
+      // 'item' key에 해당하는 value 역시 리스트(A-item)이며, 해당 리스트에서 첫 번째 값을 받아오는데, 그 값이 딕셔너리(A-item-1)임
+      // 'snippet' key의 value에 해당하는 딕셔너리(A-item-1-snippet)는, title, channelTitle, publishedAt, thumbnails, channelId를 key로 가지고 있음
+      // 'statistics' key의 value에 해당하는 딕셔너리(A-item-1-statistics)는 viewcount, likeCount를 key로 가지고 있음 
       const videoInfo = videoData.items[0];
       const { title, channelTitle, publishedAt, thumbnails, channelId } = videoInfo.snippet;
       const { viewCount, likeCount } = videoInfo.statistics;
   
-      // 📌 유튜브 채널 정보 가져오기
+      // 앞서 불러온 channelId 값을 바탕으로, youtube api를 이용해 channel 정보를 불러옴 
+      // 이때 youtube api key를 발급받아 전달해야 하며, 불러온 channel 정보는 json 파일로 저장 
       const channelResponse = await fetch(`https://www.googleapis.com/youtube/v3/channels?part=snippet&id=${channelId}&key=${API_KEY}`);
       const channelData = await channelResponse.json();
   
-      // 채널 정보 확인
+      // channel 정보가 담긴 json 파일(A)에서, 'items' key에 해당하는 value가 있는지 확인 
       if (!channelData.items || channelData.items.length === 0) throw new Error("채널 정보를 가져올 수 없습니다.");
       
+      // 'item' key에 해당하는 value 역시 리스트(A-item)이며, 해당 리스트에서 첫 번째 값을 받아오는데, 그 값이 딕셔너리(A-item-1)임
+      // 이후 계속 자료 구조를 타고 내려가 채널 프로필 이미지 url을 가져옴 
       const channelProfile = channelData.items[0].snippet.thumbnails.default.url;
   
-      // 📌 최종 결과 반환
+      // video 및 채널에 관해 불러온 모든 정보를 딕셔너리 형태로 return
+      // 이때, getYoutubeVideoDetails를 사용한 시각도 기록 
       return {
         name: title,
         video: url,
@@ -203,10 +214,16 @@ export default function Dashboard() {
       return null;
     }
   };
-  
 
+  // e: 이벤트 객체, 이벤트 감지 
   const handleInputChange = async (e) => {
+    // e.target: 이벤트가 발생한 요소, 여기서는 input 태그가 될 것 
+    // e.target.value: 이벤트가 감지한 요소의 값, 여기서는 사용자가 입력한 youtube url이 될 것
     const url = e.target.value;
+    
+    // ...newVideo: 기존 newVideo 데이터를 복사해와 그대로 사용하되
+    // video 필드만 입력받은 url로 변경해 
+    // setNewVideo: newVideo 설정 , url만 바꾸면 youtube api가 나머지는 알아서 다 바꾸므로 
     setNewVideo({ ...newVideo, video: url });
   };
 
@@ -230,11 +247,6 @@ export default function Dashboard() {
     }
   };
 
-  const getYouTubeVideoID = (url) => {
-    const match = url.match(/(?:youtu\.be\/|youtube\.com\/.*v=|youtube\.com\/embed\/|youtube\.com\/v\/|youtube\.com\/user\/.*#p\/u\/\d\/|youtube\.com\/watch\?v=|youtube\.com\/watch\?.+&v=)([^#&?\n]+)/);
-    return match ? match[1] : null;
-  };
-
   const handleToggleMode = async () => {
     if (!user) return;
   
@@ -251,14 +263,26 @@ export default function Dashboard() {
     }
   };
 
+  // url을 입력 받아 videoID만 추출하는 함수 (input: url)
+  const getYouTubeVideoID = (url) => {
+
+    // 괄호 안의 정규식과, url을 match (형식을 맞춰 봄)
+    // 형식이 일치하면, match[1]을 사용해 \/ 사이의 값(videoID에 해당)만 반환 
+    const match = url.match(/(?:youtu\.be\/|youtube\.com\/.*v=|youtube\.com\/embed\/|youtube\.com\/v\/|youtube\.com\/user\/.*#p\/u\/\d\/|youtube\.com\/watch\?v=|youtube\.com\/watch\?.+&v=)([^#&?\n]+)/);
+    return match ? match[1] : null;
+  };
+
+  // videos 배열을 isOn 상태에 따라 다른 기준으로 정렬
+  // 원본 videos 배열에 영향을 끼치지 않도록, [...videos]로 배열을 복사해 사용 
   const sortedVideos = [...videos].sort((a, b) => {
     if (isOn) {
-      return Number(b.recommend) - Number(a.recommend); // recommend 기준 내림차순
+      return Number(b.recommend) - Number(a.recommend); // isOn이 true이면 recommend를 기준으로 정렬, recommend가 많은 것(b)부터 정렬 
     } else {
-      return new Date(b.createdAt) - new Date(a.createdAt); // 업로드 날짜 기준 최신순
+      return new Date(b.createdAt) - new Date(a.createdAt); // isOn이 false이면 createdAt을 기준으로 정렬, createdAt이 큰 것(최신, b)부터 정렬
     }
   });
 
+  // 현재 user의 email에서, @ 앞부분만 반환 
   function getEmailUsername(email) {
     if (!email || typeof email !== "string") return "";
     return email.split("@")[0];
