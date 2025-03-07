@@ -208,6 +208,7 @@ export default function Dashboard() {
         likes: likeCount,
         publishedAt: publishedAt.slice(0, 10),
         createdAt: serverTimestamp(),
+        recommend: 0,
       };
     } catch (error) {
       console.error("YouTube API 오류:", error);
@@ -227,19 +228,26 @@ export default function Dashboard() {
     setNewVideo({ ...newVideo, video: url });
   };
 
+  // youtube url 입력 시 firebase에 저장 
   const handleAddVideo = async () => {
+
     if (!user || !newVideo.video) return;
+
     try {
+      // 앞서 handleInputChange 함수에서 설정한 newVideo의 video 필드(url 값)로부터 videoId를 추출 
       const videoDetails = await getYoutubeVideoDetails(newVideo.video);
+
+      // videoId를 추출했다면, db 경로 설정 후 
       if (!videoDetails) return;
       const userId = auth.currentUser.uid;
-
       const collectionPath = collection(db, "users", userId, "videos"); 
 
+      // 설정한 db 경로로 video 정보 저장. 이때 youtube api로 불러온 video 정보뿐 아니라 recommend 필드도 추가 
       await addDoc(collectionPath, {
         ...videoDetails,
-        recommend: 0, // ✅ 여기에서 recommend 필드 추가
       });
+
+      // newVideo는 다시 초기화해두기 (새로운 url 입력 받을 때까지)
       setNewVideo({ name: "", video: "", thumbnail: "", channel: "", views: "", likes: "", publishedAt: "", channelProfile: "", createdAt: serverTimestamp(), recommend: 0 });
       setFabOpen(false);
     } catch (error) {
