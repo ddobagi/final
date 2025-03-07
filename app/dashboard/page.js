@@ -255,17 +255,20 @@ export default function Dashboard() {
     }
   };
 
+  // 현재 토글 값을 db에 저장 
   const handleToggleMode = async () => {
     if (!user) return;
   
     const userId = auth.currentUser.uid;
-    const userDocRef = doc(db, "users", userId); // ✅ Firestore에서 해당 유저 문서 참조
-  
-    const newMode = isOn ? "private" : "public"; // ✅ 상태 반전 후 적용할 모드 설정
+    const userDocRef = doc(db, "users", userId); // firestore db에서 현재 유저 문서 참조 
+    // isOn이 true -> 현재는 public 모드. 토글 클릭 시 private 모드로 전환되어야 하므로, newMode에는 private 저장
+    // isOn이 false -> 현재는 private 모드. 토글 클릭 시 public 모드로 전환되어야 하므로, newMode에는 public 저장 
+    const newMode = isOn ? "private" : "public";  
   
     try {
-      await setDoc(userDocRef, { Mode: newMode }, { merge: true }); // ✅ Firestore에 Mode 필드 저장 (merge: true 옵션으로 기존 데이터 유지)
-      setIsOn(!isOn); // ✅ 상태 업데이트
+      // 설정한 db 경로에서, newMode 변수의 값을 Mode 필드에 저장 ("merge: true": 기존 데이터 유지)
+      await setDoc(userDocRef, { Mode: newMode }, { merge: true });
+      setIsOn(!isOn); // 토글 클릭 시 토글이 이동하도록 하기 위함 
     } catch (error) {
       console.error("Firestore 모드 업데이트 오류:", error);
     }
@@ -422,7 +425,7 @@ export default function Dashboard() {
                     try {
                       const batch = writeBatch(db);
 
-                      // 🔥 users/{user.uid}/videos에서 video.video와 일치하는 문서 찾기
+                      // users/{user.uid}/videos에서 video.video와 일치하는 문서 찾기
                       const userVideosRef = collection(db, "users", user.uid, "videos");
                       const userQuery = query(userVideosRef, where("video", "==", video.video));
                       const userQuerySnapshot = await getDocs(userQuery);
@@ -431,7 +434,7 @@ export default function Dashboard() {
                         batch.delete(doc.ref); // 🔥 users/{user.uid}/videos 문서 삭제
                       });
 
-                      // 🔥 gallery에서 video.video와 일치하는 문서 찾기
+                      // gallery에서 video.video와 일치하는 문서 찾기
                       const galleryRef = collection(db, "gallery");
                       const galleryQuery = query(galleryRef, where("video", "==", video.video));
                       const galleryQuerySnapshot = await getDocs(galleryQuery);
@@ -454,7 +457,6 @@ export default function Dashboard() {
                 >
                   <Trash2 size={32} />
                 </button>
-
               )}
             </Card>
           ))}
