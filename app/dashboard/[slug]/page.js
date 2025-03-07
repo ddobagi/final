@@ -1,18 +1,36 @@
+// useState, useEffect 등 react hook은 클라이언트 사이드에서만 실행되므로, 클라이언트 컴포넌트임을 선언하는 것 
 "use client";
 
+// react hook
 import { useEffect, useState } from "react";
+
+// next.js 
 import { useParams, useRouter } from "next/navigation";
+
+// firebase 
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
 import { doc, getDoc, updateDoc, addDoc, collection, serverTimestamp, query, where, getDocs, deleteDoc, writeBatch, setDoc, increment} from "firebase/firestore";
+
+// shadcn
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+
+// lucide-react 
 import { ThumbsUp, ArrowLeft, Heart } from "lucide-react";
 
+// export default: 다른 곳에서 import 할 수 있게 함
+// 다른 곳에서 import 할 수 있는 함수형 컴포넌트를 정의 
 export default function VideoDetail() {
-  const { slug } = useParams(); // URL에서 slug 가져오기
+
+  // URL에서 slug 가져오기
+  const { slug } = useParams(); 
+
+  // useRouter(): 페이지 이동을 관리하는 hook 
   const router = useRouter();
 
+  // useState() : react에서 상태를 관리하는 hook 
+  // state 정보와 setter 함수가 배열[]로 정의됨 
   const [user, setUser] = useState(null);
   const [video, setVideo] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -26,20 +44,29 @@ export default function VideoDetail() {
   const [userEmail, setUserEmail] = useState("");
   const [previousPage, setPreviousPage] = useState("/dashboard");
 
-
+  // useEffect: 컴포넌트가 렌더링될 때 실행되는 react hook 
   useEffect(() => {
+
+    // onAuthStateChanged(auth, callback): 사용자의 로그인 상태 변경을 감지하는 firebase authentication의 이벤트 리스너 
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+
+        // 현재 사용자와 현재 사용자의 이메일을, 각각 user와 userEmail로 설정 
         if (currentUser) {
             setUser(currentUser);
-            setLoading(true);
             setUserEmail(currentUser.email);
+            setLoading(true);
 
             try {
-                const userDocRef = doc(db, "users", currentUser.uid);
-                const userDocSnap = await getDoc(userDocRef);
-                const mode = userDocSnap.exists() && userDocSnap.data().Mode === "public";
+                // 현재 user 정보를 가져옴 
+                const userDocRef = doc(db, "users", currentUser.uid); // db 경로 정의
+                const userDocSnap = await getDoc(userDocRef);// 해당 db 경로의 문서 불러옴 
 
+                // 해당 문서 Mode 필드의 값이 public이면 mode = true, 아니면 mode = false
+                // isOn 값도 mode 값에 따라 변경 
+                const mode = userDocSnap.exists() && userDocSnap.data().Mode === "public";  
                 setIsOn(mode);
+
+                // 현재 페이지의 slug 값과 mode 값에 알맞게 fetchVideoData 함수 실행 
                 await fetchVideoData(slug, mode);
             } catch (error) {
                 console.error("사용자 Mode 데이터를 가져오는 중 오류 발생:", error);
@@ -54,31 +81,53 @@ export default function VideoDetail() {
         }
     });
 
+    // 간단히 표현하면
+    // useEffect (() => {
+    // const unsubcribe = onAuthStateChanged(auth, callback);
+    // return () => unsubscribe();
+    // }, []); 
+    // '컴포넌트가 rendering 되면, 정의한 unsubscribe 함수를 return하세요'인 것 + 이벤트 리스너 해제 
     return () => unsubscribe();
+  
+  // 의존성 배열에 slug와 router 포함 -> slug 값이 변경될 때마다 & router 값이 변경될 때마다 실행
   }, [slug, router]);
 
+  // useEffect: 컴포넌트가 렌더링될 때 실행되는 react hook 
   useEffect(() => {
+
+    // 이전 페이지의 url에 "/dashboard/likes"가 포함되면, 
+    // previousPage 상태변수의 값을 "/dashboard/likes"로 설정 
     if (document.referrer.includes("/dashboard/likes")) {
       setPreviousPage("/dashboard/likes");
     }
+  // 의존성 배열이 비어있음 -> 컴포넌트가 최초 렌더링(마운트) 될 때 한 번만 실행되고, 이후 실행되지 않음
   }, []);
 
+  // url을 입력 받아 videoID만 추출하는 함수 (input: url)
   const getYouTubeVideoID = (url) => {
+
+    // 괄호 안의 정규식과, url을 match (형식을 맞춰 봄)
+    // 형식이 일치하면, match[1]을 사용해 \/ 사이의 값(videoID에 해당)만 반환
     const match = url.match(/(?:youtu\.be\/|youtube\.com\/.*v=|youtube\.com\/embed\/|youtube\.com\/v\/|youtube\.com\/user\/.*#p\/u\/\d\/|youtube\.com\/watch\?v=|youtube\.com\/watch\?.+&v=)([^#&?\n]+)/);
     return match ? match[1] : null;
   };
 
-  // ✅ `isOn`이 변경될 때 fetchVideoData를 실행하지 않고, 위 `useEffect`에서 직접 실행함
+  // 동적 라우팅 페이지에 표시할 video 데이터들을 fetch 해옴 
   const fetchVideoData = async (slug, mode) => {
+
     if (!auth.currentUser) return;
+
     try {
+        // 일단 로딩 걸어 둠 
         setLoading(true);
+
+        // mode 값에 따라 상이한 db 경로에서 문서를 불러옴 
         const userId = auth.currentUser?.uid;
-
         let docRef = mode ? doc(db, "gallery", slug) : doc(db, "users", userId, "videos", slug);
-
         const docSnap = await getDoc(docRef);
 
+        // 불러온 문서에서 전체 data와 essay, isPosted 데이터를 가져와
+        // video, essay, isPosted 상태 변수에 저장 
         if (docSnap.exists()) {
             const videoData = docSnap.data();
             setVideo(videoData);
@@ -88,78 +137,87 @@ export default function VideoDetail() {
             throw new Error(`해당 비디오를 찾을 수 없습니다. (isOn: ${mode})`);
         }
 
+        // 만약 public 모드라면 
         if (mode) {
+
+          // 불러온 문서에서 recommend 데이터도 가져와 likes 상태 변수에 저장 
           const videoData = docSnap.data();
           setLikes(videoData.recommend || 0);
 
+          // Promise.all: 두 개의 firestore 요청을 한 번에 처리. api 호출 최적화 
+          // userLikeSnap과 userDocSnap에 private 모드와 public 모드의 db 경로를 각각 저장 
           const userId = auth.currentUser?.uid;
-
           const [userLikeSnap, userDocSnap] = await Promise.all([
             getDoc(doc(db, "gallery", slug, "likes", userId)),
             getDoc(doc(db, "users", userId))
           ]);
 
+          // 만약 현재 페이지의 영상에 대한, 현재 user의 likes 필드가 존재한다면 liked 상태 변수를 true로 설정 
           setLiked(userLikeSnap.exists());
 
+          // 현재 사용자 db의 mode 필드의 값이 public이면 isOn 상태 변수를 true로, private면 isOn 상태 변수를 false로 설정 
           if (userDocSnap.exists() && userDocSnap.data().Mode) {
-            setIsOn(userDocSnap.data().Mode === "public"); // ✅ Mode 값에 따라 isOn 설정
+            setIsOn(userDocSnap.data().Mode === "public"); 
           } else {
-            setIsOn(false); // ✅ Mode 값이 없으면 기본값 설정
+            setIsOn(false); // mode 값이 없으면 기본값(false)으로 설정
           }
         }
     } catch (error) {
         console.error("Firestore에서 비디오 데이터 가져오는 중 오류 발생: ", error);
         setError(error.message);
     } finally {
+        // 필요한 데이터를 모두 가져온 후 로딩 해제 
         setLoading(false);
     }
   };
 
+  // video 게시 & 게시 취소 관리 
   const handleTogglePost = async () => {
+
     if (!video) return;
-    if (!auth.currentUser) return;
 
     try {
         const userId = auth.currentUser?.uid;
-        if (!userId) {
-            return;
-        }
+        if (!video || !auth.currentUser) return;
 
-        if (!slug) {
-            console.error("❌ slug 값이 존재하지 않음");
-            return;
-        }
-
-        const userDocRef = doc(db, "users", userId, "videos", slug);
-        const userDocSnap = await getDoc(userDocRef);
+        // 현재 사용자가 저장한, 현재 페이지의 slug를 videoId로 가지는 video 정보 가져옴 
+        const userDocRef = doc(db, "users", userId, "videos", slug); // db 경로 설정 
+        const userDocSnap = await getDoc(userDocRef); // 해당 경로의 문서 불러옴 
 
         if (!userDocSnap.exists()) {
             console.error("❌ 사용자의 해당 비디오 데이터가 Firestore에 존재하지 않음");
             return;
         }
 
+        // 이미 게시된 video라면 
         if (isPosted) {
-            // ✅ 게시 취소: gallery에서 삭제
-            const q = query(collection(db, "gallery"), where("video", "==", video.video));
-            const querySnapshot = await getDocs(q);
+            // firestore db의 gallery 컬렉션에서, video 필드의 값이 video.video와 일치하는 것(즉 동일한 url을 가지는 것)만 query하도록
+            const q = query(collection(db, "gallery"), where("video", "==", video.video)); // db 경로 설정
+            const querySnapshot = await getDocs(q); // 해당 경로의 문서 가져옴 
 
             if (querySnapshot.empty) {
                 console.warn("⚠️ gallery에 해당 비디오가 없음");
-            } else {
-                const batch = writeBatch(db);
-                querySnapshot.forEach((doc) => batch.delete(doc.ref));
-                await batch.commit();
+            } else {        
+                const batch = writeBatch(db); // 한 번에 firestore 작업을 처리하기 위한 batch생성 
+                querySnapshot.forEach((doc) => batch.delete(doc.ref)); // 반복문을 돌면서 querySnapshot의 여러 문서에 대한 삭제 예약
+                await batch.commit(); // 한 번에 삭제 처리 
             }
 
-            // ✅ 사용자의 videos 데이터 업데이트
+            // 현재 사용자가 저장한, 현재 페이지의 slug를 videoId로 가지는 video 문서의
+            // isPosted 필드 값을 false로 업데이트, isPosted 상태 변수 값도 false로 설정 
             await updateDoc(userDocRef, { isPosted: false });
             setIsPosted(false);
+          
+        // 아직 게시되지 않은 video라면 
         } else {
-            // ✅ 🔥 Firestore에 저장된 essay 최신값을 다시 가져옴
-            const updatedUserDocSnap = await getDoc(userDocRef);
-            const latestEssay = updatedUserDocSnap.data().essay || "작성된 내용이 없습니다.";
+            
+            // 현재 사용자가 저장한, 현재 페이지의 slug를 videoId로 가지는 video 문서의 essay 필드의 값 불러옴  
+            const updatedUserDocSnap = await getDoc(userDocRef); // 앞서 설정한 userDocRef 경로로 문서 가져옴 
+            const latestEssay = updatedUserDocSnap.data().essay || "작성된 내용이 없습니다."; // latestEssay 변수에 저장 
 
-            // ✅ 게시: Firestore에 추가
+            // 현재 사용자가 저장한, 현재 페이지의 slug를 videoId로 가지는 video 문서의 각종 데이터를
+            // gallery db에 추가
+            // essay와 createdAt, recommend 필드도 포함됨 
             await addDoc(collection(db, "gallery"), {
                 name: video.name || "알 수 없음",
                 video: video.video || "",
@@ -175,7 +233,7 @@ export default function VideoDetail() {
                 recommend: video.recommend || 0,
             });
 
-            // ✅ 사용자의 videos 데이터 업데이트
+            // 현재 사용자가 저장한, 현재 페이지의 slug를 videoId로 가지는 video 문서의 isPosted 값도 true로 변경, isPosted 상태 변수 값도 true로 변경 
             await updateDoc(userDocRef, { isPosted: true });
             setIsPosted(true);
         }
@@ -184,26 +242,28 @@ export default function VideoDetail() {
     }
 };
 
-
+  // 에세이 저장 
   const handleSaveEssay = async () => {
+
     if (!auth.currentUser) return;
 
     try {
+
+      // / 현재 사용자가 저장한, 현재 페이지의 slug를 videoId로 가지는 video 문서의 essay 필드 업데이트 
       const userId = auth.currentUser?.uid;
-      const docRef1 = doc(db, "users", userId, "videos", slug);
-      await updateDoc(docRef1, { essay });
+      const docRef = doc(db, "users", userId, "videos", slug); // db 경로 설정 
+      await updateDoc(docRef, { essay }); // essay 필드 업데이트 
 
+      // 수정 시, gallery 컬렉션에서 해당 영상은 일단 삭제 (수정 후 다시 게시)
+      // firestore db의 gallery 컬렉션에서, video 필드의 값이 video.video와 일치하는 것(즉 동일한 url을 가지는 것)만 query하도록
+      const q = query(collection(db, "gallery"), where("video", "==", video.video)); // db 경로 설정 
+      const querySnapshot = await getDocs(q); // 해당 경로의 문서 가져옴 
 
+      const batch = writeBatch(db); // 한 번에 firestore 작업을 처리하기 위한 batch생성 
+      querySnapshot.forEach((doc) => batch.delete(doc.ref)); // 반복문을 돌면서 querySnapshot의 여러 문서에 대한 삭제 예약
+      await batch.commit(); // 한 번에 삭제 처리 
 
-      // 🔥 추가된 코드: gallery 컬렉션에서 해당 영상 삭제
-      const q = query(collection(db, "gallery"), where("video", "==", video.video));
-      const querySnapshot = await getDocs(q);
-
-      const batch = writeBatch(db);
-      querySnapshot.forEach((doc) => batch.delete(doc.ref));
-      await batch.commit();
-
-      // UI 업데이트
+      // isPosted 상태 변수는 false로, isEditing 상태 변수도 false로 변경 
       setIsPosted(false);
       setIsEditing(false);
     } catch (error) {
@@ -211,47 +271,44 @@ export default function VideoDetail() {
     }
   };
   
+  // firestore의 gallery 컬렉션에서 recommend를 증가/감소 
   const handleLike = async () => {
+
     if (!video) return;
     if (!auth.currentUser) return;
 
+    // db 경로를 설정 
     const userId = auth.currentUser?.uid;
     const docRef = doc(db, "gallery", slug);
-    const userLikeRef = doc(db, "gallery", slug, "likes", userId);
+    const userLikeRef = doc(db, "gallery", slug, "likes", userId); // gallery 컬렉션의, 현재 페이지의 slug에 해당하는 video의, 현재 user의 like 여부를 참조하는 경로 
 
     try {
+      // 이미 좋아요를 눌렀다면 
       if (liked) {
-        // 🟥 이미 좋아요를 누른 상태 → 좋아요 취소
-        await updateDoc(docRef, { recommend: increment(-1) }); // 추천 감소
-        await deleteDoc(userLikeRef); // 사용자의 좋아요 기록 삭제
+        await updateDoc(docRef, { recommend: increment(-1) }); // recommend 1 감소 
+        await deleteDoc(userLikeRef); // 현재 user의 like 문서 삭제 
 
-        setLiked(false);
-        setLikes((prevLikes) => prevLikes - 1);
+        setLiked(false); // liked 상태 변수를 false로 변경 
+        setLikes((prevLikes) => prevLikes - 1); // likes 상태 변수의 값도 1 감소 
+
+      // 아직 좋아요를 누르지 않았다면 
       } else {
-        // 🟩 아직 좋아요를 누르지 않은 상태 → 좋아요 추가
-        await updateDoc(docRef, { recommend: increment(1) }); // 추천 증가
-        await setDoc(userLikeRef, { liked: true }); // 사용자의 좋아요 기록 추가
+        await updateDoc(docRef, { recommend: increment(1) }); // recommend 1 증가 
+        await setDoc(userLikeRef, { liked: true }); // 현재 user의 like 문서를 추가하고, liked 필드를 true로 설정 
 
-        setLiked(true);
-        setLikes((prevLikes) => prevLikes + 1);
+        setLiked(true); // liked 상태 변수르 true로 변경 
+        setLikes((prevLikes) => prevLikes + 1); // likes 상태 변수의 값도 1 증가 
       }
     } catch (error) {
       console.error("좋아요 업데이트 실패:", error);
     }
   };
 
+  // 현재 user의 email에서, @ 앞부분만 반환 
   function getEmailUsername(email) {
     if (!email || typeof email !== "string") return "";
     return email.split("@")[0];
   }
-
-
-
-
-
-
-
-
 
   if (loading) return <p className="text-center mt-10">로딩 중...</p>;
   if (error) return <p className="text-center mt-10 text-red-500">{error}</p>;
@@ -259,8 +316,8 @@ export default function VideoDetail() {
   return (
     <div className="flex flex-col items-center w-full p-6">
       <div className="w-full max-w-2xl flex justify-between">
-        <button onClick={() => router.push(previousPage)} className="flex items-center mb-2 cursor-pointor">
-          <ArrowLeft className="w-6 h-6 mr-2" />
+        <button onClick={() => router.push(previousPage)} className="flex items-center mb-2">
+          <ArrowLeft className="w-6 h-6 mr-2 cursor-pointer" />
         </button>
         <div className="flex items-center max-w-[600px] w-full h-10 space-x-2 justify-end">
           <p className="text-gray-500 text-sm font-pretendard">{getEmailUsername(userEmail)} 님</p>
@@ -307,8 +364,8 @@ export default function VideoDetail() {
                     className="flex items-center p-2 rounded-lg transition"
                     onClick={handleLike}
                   >
-                    <Heart className="w-4 h-4 text-red-500" fill={liked ? "currentColor" : "none"} />
-                    <span className="ml-2 text-lg font-semibold">{likes}</span>
+                    <Heart className="w-4 h-4 text-red-500 cursor-pointer" fill={liked ? "currentColor" : "none"} />
+                    <span className="ml-2 text-lg font-semibold cursor-pointer">{likes}</span>
                   </button>
                 )}
               </div>
@@ -346,7 +403,6 @@ export default function VideoDetail() {
                 </div>
               )}
             </div>
-
           </CardContent>
         </Card>
       )}
