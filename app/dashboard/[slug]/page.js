@@ -415,22 +415,22 @@ export default function VideoDetail() {
   
       if (likeSnap.exists()) {
         // 🔥 이미 좋아요를 눌렀다면 취소
-        await updateDoc(replyRef, { likes: increment(-1) }); // Firestore에서 likes 1 감소
+        await updateDoc(replyRef, { recommend: increment(-1) }); // Firestore에서 likes 1 감소
         await deleteDoc(userLikeRef); // 현재 유저의 like 문서 삭제
         
         setReplies((prevReplies) =>
           prevReplies.map((reply) =>
-            reply.id === commentId ? { ...reply, liked: false, likes: reply.likes - 1 } : reply
+            reply.id === commentId ? { ...reply, liked: false, likes: reply.recommend - 1 } : reply
           )
         );
       } else {
         // 🔥 좋아요 추가
-        await updateDoc(replyRef, { likes: increment(1) }); // Firestore에서 likes 1 증가
+        await updateDoc(replyRef, { recommend: increment(1) }); // Firestore에서 likes 1 증가
         await setDoc(userLikeRef, { liked: true }); // 현재 유저의 like 문서 추가
   
         setReplies((prevReplies) =>
           prevReplies.map((reply) =>
-            reply.id === commentId ? { ...reply, liked: true, likes: reply.likes + 1 } : reply
+            reply.id === commentId ? { ...reply, liked: true, likes: reply.recommend + 1 } : reply
           )
         );
       }
