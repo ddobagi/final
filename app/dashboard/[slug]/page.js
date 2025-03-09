@@ -117,6 +117,7 @@ export default function VideoDetail() {
     // 괄호 안의 정규식과, url을 match (형식을 맞춰 봄)
     // 형식이 일치하면, match[1]을 사용해 \/ 사이의 값(videoID에 해당)만 반환
     const pattern = /(?:youtu\.be\/|youtube\.com\/.*[?&]v=|youtube\.com\/embed\/|youtube\.com\/v\/|youtube\.com\/shorts\/|youtube\.com\/user\/.*#p\/u\/\d\/|youtube\.com\/watch\?.*?v=)([a-zA-Z0-9_-]{11})/;
+    const match = url.match(pattern);
     return match ? match[1] : null;
   };
 
