@@ -50,6 +50,8 @@ export default function VideoDetail() {
   const [replyVideoUrl, setReplyVideoUrl] = useState(""); // 답글 비디오 URL
   const [replyEssay, setReplyEssay] = useState(""); // 답글 에세이 내용
   const [replies, setReplies] = useState([]); // 답글 목록
+  const [replyLiked, setReplyLiked] = useState(false);
+  const [replyLikes, setReplyLikes] = useState(1);
 
   // vercel 환경 변수로 저장해둔 youtube api key
   // 반드시 "NEXT_PUBLIC_~"가 붙어야 함 
@@ -402,28 +404,20 @@ export default function VideoDetail() {
     const userLikeRef = doc(db, "gallery", slug, "comment", commentId, "likes", userId); 
   
     try {
-      const likeSnap = await getDoc(userLikeRef); // 현재 사용자가 좋아요를 눌렀는지 확인
-  
-      if (likeSnap.exists()) {
-        // 🔥 이미 좋아요를 눌렀다면 취소
-        await updateDoc(replyRef, { likes: increment(-1) }); // Firestore에서 likes 1 감소
-        await deleteDoc(userLikeRef); // 현재 유저의 like 문서 삭제
-        
-        setReplies((prevReplies) =>
-          prevReplies.map((reply) =>
-            reply.id === commentId ? { ...reply, liked: false, likes: reply.likes - 1 } : reply
-          )
-        );
+      if (liked) {
+        await updateDoc(replyRef, { recommend: increment(-1) }); // recommend 1 감소 
+        await deleteDoc(userLikeRef); // 현재 user의 like 문서 삭제 
+
+        setReplyLiked(false); // liked 상태 변수를 false로 변경 
+        setReplyLikes((prevReplyLikes) => prevReplyLikes - 1); // likes 상태 변수의 값도 1 감소 
+
+      // 아직 좋아요를 누르지 않았다면 
       } else {
-        // 🔥 좋아요 추가
-        await updateDoc(replyRef, { likes: increment(1) }); // Firestore에서 likes 1 증가
-        await setDoc(userLikeRef, { liked: true }); // 현재 유저의 like 문서 추가
-  
-        setReplies((prevReplies) =>
-          prevReplies.map((reply) =>
-            reply.id === commentId ? { ...reply, liked: true, likes: reply.likes + 1 } : reply
-          )
-        );
+        await updateDoc(replyRef, { recommend: increment(1) }); // recommend 1 증가 
+        await setDoc(userLikeRef, { replyLiked: true }); // 현재 user의 like 문서를 추가하고, liked 필드를 true로 설정 
+
+        setReplyLiked(true); // liked 상태 변수르 true로 변경 
+        setReplyLikes((prevReplyLikes) => prevReplyLikes + 1); // likes 상태 변수의 값도 1 증가 
       }
     } catch (error) {
       console.error("🔥 답글 좋아요 업데이트 실패:", error);
@@ -654,7 +648,7 @@ export default function VideoDetail() {
                               className="w-4 h-4 text-red-500 cursor-pointer"
                               fill={reply.liked ? "currentColor" : "none"}
                             />
-                            <span className="ml-2 text-lg font-semibold cursor-pointer">{reply.likes}</span>
+                            <span className="ml-2 text-lg font-semibold">{reply.likes}</span>
                           </button>
                         )}
                       </div>
