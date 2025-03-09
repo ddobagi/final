@@ -348,28 +348,42 @@ export default function VideoDetail() {
     }
   
     try {
-      const repliesRef = collection(db, "gallery", slug, "comment");
+      // 🔥 YouTube API를 통해 답글 영상 정보 가져오기
+      const videoDetails = await getYoutubeVideoDetails(replyVideoUrl);
+      if (!videoDetails) {
+        alert("유효한 YouTube 영상이 아닙니다.");
+        return;
+      }
   
+      const repliesRef = collection(db, "gallery", slug, "comment");
       const newReplyRef = await addDoc(repliesRef, {
-        videoUrl: replyVideoUrl,
+        videoId: videoDetails.videoId,
+        name: videoDetails.name,
+        video: videoDetails.video,
+        thumbnail: videoDetails.thumbnail,
+        channel: videoDetails.channel,
+        channelProfile: videoDetails.channelProfile,
+        views: videoDetails.views,
+        likes: videoDetails.likes,
+        publishedAt: videoDetails.publishedAt,
         essay: replyEssay,
         createdAt: serverTimestamp(),
         user: userEmail,
-        likes: 0
+        recommend: 0,
       });
   
-      // 답글 UI 초기화 & 새로운 답글 불러오기
+      // 🔥 상태 업데이트 (답글 목록 새로고침)
       setReplyVideoUrl("");
       setReplyEssay("");
       setReplying(false);
   
       const querySnapshot = await getDocs(repliesRef);
-      setReplies(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-  
+      setReplies(querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
     } catch (error) {
       console.error("🔥 답글 저장 오류: ", error);
     }
   };
+  
 
   
   const handleReplyLike = async (commentId) => {
@@ -407,6 +421,60 @@ export default function VideoDetail() {
       }
     } catch (error) {
       console.error("🔥 답글 좋아요 업데이트 실패:", error);
+    }
+  };
+  
+
+  const getYoutubeVideoDetails = async (url) => {
+    try {
+      // YouTube URL에서 videoId 추출
+      const pattern = /(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|embed|shorts)\/|.*[?&]v=)|youtu\.be\/)([^"&?/\s]+)/;
+      const match = url.match(pattern);
+  
+      if (!match || !match[1]) throw new Error("유효한 YouTube 링크가 아닙니다.");
+      const videoId = match[1];
+  
+      // YouTube API 호출 (영상 정보 가져오기)
+      const videoResponse = await fetch(
+        `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&id=${videoId}&key=${API_KEY}`
+      );
+      const videoData = await videoResponse.json();
+  
+      if (!videoData.items || videoData.items.length === 0)
+        throw new Error("비디오 정보를 가져올 수 없습니다.");
+  
+      const videoInfo = videoData.items[0];
+      const { title, channelTitle, publishedAt, thumbnails, channelId } = videoInfo.snippet;
+      const { viewCount, likeCount } = videoInfo.statistics;
+  
+      // YouTube API 호출 (채널 정보 가져오기)
+      const channelResponse = await fetch(
+        `https://www.googleapis.com/youtube/v3/channels?part=snippet&id=${channelId}&key=${API_KEY}`
+      );
+      const channelData = await channelResponse.json();
+  
+      if (!channelData.items || channelData.items.length === 0)
+        throw new Error("채널 정보를 가져올 수 없습니다.");
+  
+      const channelProfile = channelData.items[0].snippet.thumbnails.default.url;
+  
+      // 🔥 불러온 영상 정보를 객체로 반환 (답글에도 사용 가능하도록)
+      return {
+        videoId,
+        name: title,
+        video: url,
+        thumbnail: thumbnails.high.url,
+        channel: channelTitle,
+        channelProfile,
+        views: viewCount,
+        likes: likeCount,
+        publishedAt: publishedAt.slice(0, 10),
+        createdAt: serverTimestamp(),
+        recommend: 0,
+      };
+    } catch (error) {
+      console.error("🔥 YouTube API 오류:", error);
+      return null;
     }
   };
   
@@ -547,23 +615,31 @@ export default function VideoDetail() {
                   <div className="relative w-full aspect-video">
                     <iframe
                       className="w-full h-full rounded-t-lg"
-                      src={`https://www.youtube.com/embed/${getYouTubeVideoID(reply.videoUrl)}`}
+                      src={`https://www.youtube.com/embed/${reply.videoId}`}
                       frameBorder="0"
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                       allowFullScreen
                     ></iframe>
                   </div>
                   <CardContent className="p-4">
-                    <p className="text-sm text-gray-700">{reply.essay}</p>
+                    <h1 className="text-lg font-bold">{reply.name}</h1>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center">
+                        <img src={reply.channelProfile} alt="Channel Profile" className="w-8 h-8 rounded-full mr-2" />
+                        <span className="text-md text-gray-700">{reply.channel}</span>
+                      </div>
+                      <p className="text-sm text-gray-500">{reply.views} views · {reply.publishedAt}</p>
+                    </div>
+                    <p className="text-sm text-gray-700 mt-2">{reply.essay}</p>
                     <p className="text-xs text-gray-500">
-                      작성자: {reply.user} · {new Date(reply.createdAt?.seconds * 1000).toLocaleString()}
+                      작성자: {reply.user} · {reply.createdAt?.seconds ? new Date(reply.createdAt.seconds * 1000).toLocaleString() : "날짜 없음"}
                     </p>
 
                     {/* 🔥 답글 좋아요 버튼 */}
                     <div className="flex justify-end">
                       <button
                         className="flex items-center p-2 rounded-lg transition"
-                        onClick={() => handleReplyLike(reply.id, reply.liked)}
+                        onClick={() => handleReplyLike(reply.id)}
                       >
                         <Heart
                           className="w-4 h-4 text-red-500 cursor-pointer"
