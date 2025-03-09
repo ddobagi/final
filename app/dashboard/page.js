@@ -160,7 +160,7 @@ export default function Dashboard() {
     try {
 
       // pattern과 url을 match (형식을 맞춰봄) 
-      const pattern = /(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|embed|shorts)\/|.*[?&]v=)|youtu\.be\/)([^"&?/\s]+)/;
+      const pattern = /(?:youtu\.be\/|youtube\.com\/.*v=|youtube\.com\/embed\/|youtube\.com\/v\/|youtube\.com\/user\/.*#p\/u\/\d\/|youtube\.com\/watch\?v=|youtube\.com\/watch\?.+&v=)([^#&?\n]+)/;
       const match = url.match(pattern);
   
       // 만약 match되지 않는다면 에러 메시지 출력 

@@ -428,7 +428,7 @@ export default function VideoDetail() {
   const getYoutubeVideoDetails = async (url) => {
     try {
       // YouTube URL에서 videoId 추출
-      const pattern = /(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|embed|shorts)\/|.*[?&]v=)|youtu\.be\/)([^"&?/\s]+)/;
+      const pattern = /(?:youtu\.be\/|youtube\.com\/.*v=|youtube\.com\/embed\/|youtube\.com\/v\/|youtube\.com\/user\/.*#p\/u\/\d\/|youtube\.com\/watch\?v=|youtube\.com\/watch\?.+&v=)([^#&?\n]+)/;
       const match = url.match(pattern);
   
       if (!match || !match[1]) throw new Error("유효한 YouTube 링크가 아닙니다.");
