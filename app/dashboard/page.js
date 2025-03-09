@@ -321,7 +321,7 @@ export default function Dashboard() {
         {searchMode && (
           <input
             type="text"
-            className="flex-1 ml-4 px-2 py-1 text-black rounded bg-gray-100"
+            className="flex-1 ml-4 px-2 py-1 text-black rounded bg-gray-100 cursor-pointer"
             placeholder="Search..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}

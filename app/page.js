@@ -1,16 +1,31 @@
+// useState, useEffect 등 react hook은 클라이언트 사이드에서만 실행되므로, 클라이언트 컴포넌트임을 선언하는 것 
 "use client";
 
+// react 
 import { useState, useEffect } from "react";
+
+// next.js 
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+
+// firebase 
 import { auth, provider } from "@/lib/firebase";
 import { signInWithPopup, getRedirectResult, onAuthStateChanged, signOut } from "firebase/auth";
 
+// export default: 다른 곳에서 import 할 수 있게 함
+// 다른 곳에서 import 할 수 있는 함수형 컴포넌트를 정의 
 export default function Home() {
+
+  // useState() : react에서 상태를 관리하는 hook 
+  // state 정보와 setter 함수가 배열[]로 정의됨 
   const [user, setUser] = useState(null);
+
+  // useRouter(): 페이지 이동을 관리하는 hook 
   const router = useRouter();
 
+  // useEffect: 컴포넌트가 렌더링될 때 실행되는 react hook 
   useEffect(() => {
+    
     if (!auth) return;
 
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {

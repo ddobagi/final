@@ -44,6 +44,14 @@ export default function VideoDetail() {
   const [userEmail, setUserEmail] = useState("");
   const [previousPage, setPreviousPage] = useState("/dashboard");
 
+  // 🚨 답글 기능 🚨
+
+  const [replying, setReplying] = useState(false); // 답글 입력 UI 활성화 여부
+  const [replyVideoUrl, setReplyVideoUrl] = useState(""); // 답글 비디오 URL
+  const [replyEssay, setReplyEssay] = useState(""); // 답글 에세이 내용
+  const [replies, setReplies] = useState([]); // 답글 목록
+  
+
   // useEffect: 컴포넌트가 렌더링될 때 실행되는 react hook 
   useEffect(() => {
 
@@ -111,6 +119,27 @@ export default function VideoDetail() {
     const match = url.match(/(?:youtu\.be\/|youtube\.com\/.*v=|youtube\.com\/embed\/|youtube\.com\/v\/|youtube\.com\/user\/.*#p\/u\/\d\/|youtube\.com\/watch\?v=|youtube\.com\/watch\?.+&v=)([^#&?\n]+)/);
     return match ? match[1] : null;
   };
+
+  // 🚨 답글 기능 🚨
+  useEffect(() => {
+    if (isOn) {
+      const fetchReplies = async () => {
+        try {
+          const repliesRef = collection(db, "gallery", slug, "comment");
+          const querySnapshot = await getDocs(repliesRef);
+          const repliesList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          setReplies(repliesList);
+        } catch (error) {
+          console.error("🔥 답글을 가져오는 중 오류 발생: ", error);
+        }
+      };
+  
+      fetchReplies();
+    }
+  }, [slug, isOn]);
+  
+
+
 
   // 동적 라우팅 페이지에 표시할 video 데이터들을 fetch 해옴 
   const fetchVideoData = async (slug, mode) => {
@@ -310,6 +339,65 @@ export default function VideoDetail() {
     return email.split("@")[0];
   }
 
+
+  // 🚨 답글 기능 🚨
+  const handlePostReply = async () => {
+    if (!replyVideoUrl || !replyEssay) {
+      alert("비디오 URL과 에세이를 입력해주세요.");
+      return;
+    }
+  
+    try {
+      const repliesRef = collection(db, "gallery", slug, "comment");
+  
+      const newReplyRef = await addDoc(repliesRef, {
+        videoUrl: replyVideoUrl,
+        essay: replyEssay,
+        createdAt: serverTimestamp(),
+        user: userEmail,
+        likes: 0
+      });
+  
+      // 답글 UI 초기화 & 새로운 답글 불러오기
+      setReplyVideoUrl("");
+      setReplyEssay("");
+      setReplying(false);
+  
+      const querySnapshot = await getDocs(repliesRef);
+      setReplies(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+  
+    } catch (error) {
+      console.error("🔥 답글 저장 오류: ", error);
+    }
+  };
+
+  
+  const handleReplyLike = async (commentId, liked) => {
+    if (!auth.currentUser) return;
+  
+    const replyRef = doc(db, "gallery", slug, "comment", commentId);
+    const likeRef = doc(db, "gallery", slug, "comment", commentId, "likes", auth.currentUser.uid);
+  
+    try {
+      if (liked) {
+        await updateDoc(replyRef, { likes: increment(-1) });
+        await deleteDoc(likeRef);
+      } else {
+        await updateDoc(replyRef, { likes: increment(1) });
+        await setDoc(likeRef, { liked: true });
+      }
+  
+      // 답글 목록을 다시 불러오기
+      const repliesRef = collection(db, "gallery", slug, "comment");
+      const querySnapshot = await getDocs(repliesRef);
+      setReplies(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+  
+    } catch (error) {
+      console.error("🔥 답글 좋아요 업데이트 실패: ", error);
+    }
+  };
+  
+
   if (loading) return <p className="text-center mt-10">로딩 중...</p>;
   if (error) return <p className="text-center mt-10 text-red-500">{error}</p>;
 
@@ -405,6 +493,78 @@ export default function VideoDetail() {
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {/* 🚨 답글 기능 🚨 🔥 답글 기능 (isOn이 true일 때만 활성화) */}
+      {isOn && (
+        <div className="mt-4">
+          <Button onClick={() => setReplying(!replying)} className="w-full">
+            {replying ? "답글 취소" : "답글 달기"}
+          </Button>
+
+          {replying && (
+            <div className="mt-3 p-3 border rounded-lg bg-gray-50">
+              <input
+                type="text"
+                placeholder="유튜브 URL 입력"
+                className="w-full p-2 border rounded"
+                value={replyVideoUrl}
+                onChange={(e) => setReplyVideoUrl(e.target.value)}
+              />
+              <textarea
+                placeholder="에세이 입력"
+                className="w-full mt-2 p-2 border rounded"
+                value={replyEssay}
+                onChange={(e) => setReplyEssay(e.target.value)}
+              />
+              <div className="flex justify-end mt-2">
+                <Button onClick={handlePostReply} className="bg-blue-500 text-white">
+                  답글 등록
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* 🔥 기존 답글 리스트 표시 */}
+          {replies.length > 0 && (
+            <div className="mt-4">
+              <h3 className="text-lg font-semibold">답글 목록</h3>
+              {replies.map((reply) => (
+                <Card key={reply.id} className="mt-3 w-full max-w-2xl">
+                  <div className="relative w-full aspect-video">
+                    <iframe
+                      className="w-full h-full rounded-t-lg"
+                      src={`https://www.youtube.com/embed/${getYouTubeVideoID(reply.videoUrl)}`}
+                      frameBorder="0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    ></iframe>
+                  </div>
+                  <CardContent className="p-4">
+                    <p className="text-sm text-gray-700">{reply.essay}</p>
+                    <p className="text-xs text-gray-500">
+                      작성자: {reply.user} · {new Date(reply.createdAt?.seconds * 1000).toLocaleString()}
+                    </p>
+
+                    {/* 🔥 답글 좋아요 버튼 */}
+                    <div className="flex justify-end">
+                      <button
+                        className="flex items-center p-2 rounded-lg transition"
+                        onClick={() => handleReplyLike(reply.id, reply.liked)}
+                      >
+                        <Heart
+                          className="w-4 h-4 text-red-500 cursor-pointer"
+                          fill={reply.liked ? "currentColor" : "none"}
+                        />
+                        <span className="ml-2 text-lg font-semibold cursor-pointer">{reply.likes}</span>
+                      </button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
       )}
     </div>
   );
