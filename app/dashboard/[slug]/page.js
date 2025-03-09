@@ -666,7 +666,7 @@ export default function VideoDetail() {
                         )}
                       </div>
                       <p className="mt-2 p-2 border rounded bg-gray-100 font-nanum_pen">
-                        {replyEssay || "작성된 내용이 없습니다."}
+                        {reply.essay || "작성된 내용이 없다??."}
                       </p>
                     </div>
 
