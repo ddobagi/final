@@ -668,6 +668,24 @@ export default function VideoDetail() {
                         )}
                       </div>
                     </div>
+                    {/* 🔥 Essay 입력 또는 표시 */}
+                    {!isOn ? (
+                      isEditing ? (
+                        <textarea
+                          className="w-full p-2 border rounded mt-2 font-nanum_pen"
+                          value={essay}
+                          onChange={(e) => setReplyEssay(e.target.value)}
+                        />
+                      ) : (
+                        <p className="mt-2 p-2 border rounded bg-gray-100 font-nanum_pen">
+                          {essay || "작성된 내용이 없습니다."}
+                        </p>
+                      )
+                    ) : (
+                      <p className="mt-2 p-2 border rounded bg-gray-100 font-nanum_pen">
+                        {essay || "작성된 내용이 없습니다."}
+                      </p>
+                    )}
                   </CardContent>
                 </Card>
               ))}
