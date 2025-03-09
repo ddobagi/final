@@ -387,9 +387,9 @@ export default function VideoDetail() {
         likes: videoDetails.likes,
         publishedAt: videoDetails.publishedAt,
         essay: latestEssay,
+        createdAt: serverTimestamp(),
         user: userEmail,
         recommend: 0,
-        createdAt: serverTimestamp(),
       });
   
       // 🔥 상태 업데이트 (답글 목록 새로고침)
@@ -489,6 +489,7 @@ export default function VideoDetail() {
         views: viewCount,
         likes: likeCount,
         publishedAt: publishedAt.slice(0, 10),
+        createdAt: serverTimestamp(),
         recommend: 0,
       };
     } catch (error) {
