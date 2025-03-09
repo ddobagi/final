@@ -652,7 +652,6 @@ export default function VideoDetail() {
                           </button>
                         )}
                       </div>
-                    </div>
 
                       {/* 🔥 Essay 입력 또는 표시 */}
                       {!isOn ? (
