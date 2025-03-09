@@ -648,10 +648,41 @@ export default function VideoDetail() {
                               className="w-4 h-4 text-red-500 cursor-pointer"
                               fill={reply.liked ? "currentColor" : "none"}
                             />
-                            <span className="ml-2 text-lg font-semibold">{reply.recommend}</span>
+                            <span className="ml-2 text-lg font-semibold">{replyLikes}</span>
                           </button>
                         )}
                       </div>
+                    </div>
+
+                      {/* 🔥 Essay 입력 또는 표시 */}
+                      {!isOn ? (
+                        isEditing ? (
+                          <textarea
+                            className="w-full p-2 border rounded mt-2 font-nanum_pen"
+                            value={replyEssay}
+                            onChange={(e) => setReplyEssay(e.target.value)}
+                          />
+                        ) : (
+                          <p className="mt-2 p-2 border rounded bg-gray-100 font-nanum_pen">
+                            {essay || "작성된 내용이 없습니다."}
+                          </p>
+                        )
+                      ) : (
+                        <p className="mt-2 p-2 border rounded bg-gray-100 font-nanum_pen">
+                          {essay || "작성된 내용이 없습니다."}
+                        </p>
+                      )}
+
+                      {/* 🔥 isOn이 false일 때만 버튼 표시 */}
+                      {!isOn && (
+                        <div className="flex mt-2 space-x-2 font-pretendard justify-end">
+                          {isEditing ? (
+                            <Button onClick={handleSaveEssay}>저장</Button>
+                          ) : (
+                            <Button onClick={() => setIsEditing(true)}>수정</Button>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
