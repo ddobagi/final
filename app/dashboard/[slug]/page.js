@@ -132,7 +132,15 @@ export default function VideoDetail() {
         try {
           const repliesRef = collection(db, "gallery", slug, "comment");
           const querySnapshot = await getDocs(repliesRef);
-          const repliesList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          const repliesList = querySnapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+              id: doc.id,
+              ...data,
+              likes: data.likes || 0,
+              recommend: data.recommend || 0
+            };
+        });
           setReplies(repliesList);
         } catch (error) {
           console.error("🔥 답글을 가져오는 중 오류 발생: ", error);
@@ -362,7 +370,8 @@ export default function VideoDetail() {
       }
   
       const repliesRef = collection(db, "gallery", slug, "comment");
-      const newReplyRef = await addDoc(repliesRef, {
+
+      await addDoc(repliesRef, {
         videoId: videoDetails.videoId,
         name: videoDetails.name,
         video: videoDetails.video,
@@ -654,7 +663,7 @@ export default function VideoDetail() {
                               className="w-4 h-4 text-red-500 cursor-pointer"
                               fill={reply.liked ? "currentColor" : "none"}
                             />
-                            <span className="ml-2 text-lg font-semibold cursor-pointer">{reply.likes}</span>
+                            <span className="ml-2 text-lg font-semibold cursor-pointer">{reply.recommend}</span>
                           </button>
                         )}
                       </div>
