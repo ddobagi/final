@@ -389,7 +389,6 @@ export default function VideoDetail() {
         essay: latestEssay,
         user: userEmail,
         recommend: 0,
-        createdAt: serverTimestamp(),
       });
   
       // 🔥 상태 업데이트 (답글 목록 새로고침)
