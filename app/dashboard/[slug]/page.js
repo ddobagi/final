@@ -648,7 +648,7 @@ export default function VideoDetail() {
                               className="w-4 h-4 text-red-500 cursor-pointer"
                               fill={reply.liked ? "currentColor" : "none"}
                             />
-                            <span className="ml-2 text-lg font-semibold">{reply.likes}</span>
+                            <span className="ml-2 text-lg font-semibold">{reply.recommend}</span>
                           </button>
                         )}
                       </div>
