@@ -137,8 +137,8 @@ export default function VideoDetail() {
             return {
               id: doc.id,
               ...data,
-              likes: data.likes || 0,
-              recommend: data.recommend || 0
+              likes: data.likes,
+              recommend: data.recommend
             };
         });
           setReplies(repliesList);
@@ -420,7 +420,7 @@ export default function VideoDetail() {
         
         setReplies((prevReplies) =>
           prevReplies.map((reply) =>
-            reply.id === commentId ? { ...reply, liked: false, likes: reply.recommend - 1 } : reply
+            reply.id === commentId ? { ...reply, liked: false} : reply
           )
         );
       } else {
@@ -430,7 +430,7 @@ export default function VideoDetail() {
   
         setReplies((prevReplies) =>
           prevReplies.map((reply) =>
-            reply.id === commentId ? { ...reply, liked: true, likes: reply.recommend + 1 } : reply
+            reply.id === commentId ? { ...reply, liked: true} : reply
           )
         );
       }
