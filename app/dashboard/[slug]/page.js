@@ -368,13 +368,8 @@ export default function VideoDetail() {
         alert("유효한 YouTube 영상이 아닙니다.");
         return;
       }
-  
-      const repliesRef = collection(db, "gallery", slug, "comment");
 
-
-
-
-      await addDoc(repliesRef, {
+      await addDoc(collection(db, "gallery", slug, "comment"), {
         videoId: videoDetails.videoId,
         name: videoDetails.name,
         video: videoDetails.video,
@@ -384,7 +379,7 @@ export default function VideoDetail() {
         views: videoDetails.views,
         likes: videoDetails.likes,
         publishedAt: videoDetails.publishedAt,
-        essay: replyEssay,
+        essay: latestEssay,
         createdAt: serverTimestamp(),
         user: userEmail,
         recommend: 0,
