@@ -372,28 +372,41 @@ export default function VideoDetail() {
   };
 
   
-  const handleReplyLike = async (commentId, liked) => {
+  const handleReplyLike = async (commentId) => {
+
     if (!auth.currentUser) return;
-  
+    
+    // Firestore 경로 설정
+    const userId = auth.currentUser?.uid;
     const replyRef = doc(db, "gallery", slug, "comment", commentId);
-    const likeRef = doc(db, "gallery", slug, "comment", commentId, "likes", auth.currentUser.uid);
+    const userLikeRef = doc(db, "gallery", slug, "comment", commentId, "likes", userId); 
   
     try {
-      if (liked) {
-        await updateDoc(replyRef, { likes: increment(-1) });
-        await deleteDoc(likeRef);
+      const likeSnap = await getDoc(userLikeRef); // 현재 사용자가 좋아요를 눌렀는지 확인
+  
+      if (likeSnap.exists()) {
+        // 🔥 이미 좋아요를 눌렀다면 취소
+        await updateDoc(replyRef, { likes: increment(-1) }); // Firestore에서 likes 1 감소
+        await deleteDoc(userLikeRef); // 현재 유저의 like 문서 삭제
+        
+        setReplies((prevReplies) =>
+          prevReplies.map((reply) =>
+            reply.id === commentId ? { ...reply, liked: false, likes: reply.likes - 1 } : reply
+          )
+        );
       } else {
-        await updateDoc(replyRef, { likes: increment(1) });
-        await setDoc(likeRef, { liked: true });
+        // 🔥 좋아요 추가
+        await updateDoc(replyRef, { likes: increment(1) }); // Firestore에서 likes 1 증가
+        await setDoc(userLikeRef, { liked: true }); // 현재 유저의 like 문서 추가
+  
+        setReplies((prevReplies) =>
+          prevReplies.map((reply) =>
+            reply.id === commentId ? { ...reply, liked: true, likes: reply.likes + 1 } : reply
+          )
+        );
       }
-  
-      // 답글 목록을 다시 불러오기
-      const repliesRef = collection(db, "gallery", slug, "comment");
-      const querySnapshot = await getDocs(repliesRef);
-      setReplies(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-  
     } catch (error) {
-      console.error("🔥 답글 좋아요 업데이트 실패: ", error);
+      console.error("🔥 답글 좋아요 업데이트 실패:", error);
     }
   };
   
