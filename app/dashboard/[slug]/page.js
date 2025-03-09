@@ -351,7 +351,7 @@ export default function VideoDetail() {
       // 🔥 YouTube API를 통해 답글 영상 정보 가져오기
       const videoDetails = await getYoutubeVideoDetails(replyVideoUrl);
       if (!videoDetails) {
-        console.log(replyVideoUrl)
+        console.log(replyVideoUrl);
         alert("유효한 YouTube 영상이 아닙니다. 여기서 문제임!");
         return;
       }
