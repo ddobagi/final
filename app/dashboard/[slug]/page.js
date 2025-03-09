@@ -628,31 +628,36 @@ export default function VideoDetail() {
                     ></iframe>
                   </div>
                   <CardContent className="p-4">
-                    <h1 className="text-lg font-bold">{reply.name}</h1>
-                    <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-bold mb-2">{reply.name}</h3>
+                    <div className="flex items-center justify-between w-full">
                       <div className="flex items-center">
-                        <img src={reply.channelProfile} alt="Channel Profile" className="w-8 h-8 rounded-full mr-2" />
-                        <span className="text-md text-gray-700">{reply.channel}</span>
+                        <img src={reply.channelProfile} alt="Channel Profile" className="w-10 h-10 rounded-full mr-3" />
+                        <span className="text-lg font-semibold">{reply.channel}</span>
                       </div>
-                      <p className="text-sm text-gray-500">{reply.views} views · {reply.publishedAt}</p>
+                      <div className="flex items-center">
+                        <ThumbsUp className="w-5 h-5 text-gray-500 mr-1" />
+                        <span className="text-gray-600">{reply.likes}</span>
+                      </div>
                     </div>
-                    <p className="text-sm text-gray-700 mt-2">{reply.essay}</p>
-                    <p className="text-xs text-gray-500">
-                      작성자: {reply.user} · {reply.createdAt?.seconds ? new Date(reply.createdAt.seconds * 1000).toLocaleString() : "날짜 없음"}
-                    </p>
+                    <p className="text-sm text-gray-500 mt-2">{reply.views} views · {new Date(reply.publishedAt).toLocaleDateString()}</p>
 
                     {/* 🔥 답글 좋아요 버튼 */}
-                    <div className="flex justify-end">
-                      <button
-                        className="flex items-center p-2 rounded-lg transition"
-                        onClick={() => handleReplyLike(reply.id)}
-                      >
-                        <Heart
-                          className="w-4 h-4 text-red-500 cursor-pointer"
-                          fill={reply.liked ? "currentColor" : "none"}
-                        />
-                        <span className="ml-2 text-lg font-semibold cursor-pointer">{reply.likes}</span>
-                      </button>
+                    <div className="mt-4">
+                      <div className="flex items-center justify-between">
+                        <h2 className="text-lg font-semibold font-nanum_pen">Essay</h2>
+                        { isOn && (
+                            <button
+                            className="flex items-center p-2 rounded-lg transition"
+                            onClick={() => handleReplyLike(reply.id)}
+                          >
+                            <Heart
+                              className="w-4 h-4 text-red-500 cursor-pointer"
+                              fill={reply.liked ? "currentColor" : "none"}
+                            />
+                            <span className="ml-2 text-lg font-semibold cursor-pointer">{reply.likes}</span>
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
