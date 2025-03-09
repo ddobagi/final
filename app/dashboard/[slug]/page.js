@@ -365,11 +365,16 @@ export default function VideoDetail() {
       const videoDetails = await getYoutubeVideoDetails(replyVideoUrl);
       if (!videoDetails) {
         console.log(replyVideoUrl);
-        alert("유효한 YouTube 영상이 아닙니다. 여기서 문제임!");
+        alert("유효한 YouTube 영상이 아닙니다.");
         return;
       }
   
       const repliesRef = collection(db, "gallery", slug, "comment");
+
+      // 현재 사용자가 저장한, 현재 페이지의 slug를 videoId로 가지는 video 문서의 essay 필드의 값 불러옴  
+      const updatedUserDocSnap = await getDoc(repliesRef); // 앞서 설정한 userDocRef 경로로 문서 가져옴 
+      const latestEssay = updatedUserDocSnap.data().essay || "작성된 내용이 없습니다."; // latestEssay 변수에 저장 
+
 
       await addDoc(repliesRef, {
         videoId: videoDetails.videoId,
@@ -381,7 +386,7 @@ export default function VideoDetail() {
         views: videoDetails.views,
         likes: videoDetails.likes,
         publishedAt: videoDetails.publishedAt,
-        essay: replyEssay,
+        essay: latestEssay,
         createdAt: serverTimestamp(),
         user: userEmail,
         recommend: 0,
