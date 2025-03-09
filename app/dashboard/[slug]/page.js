@@ -116,7 +116,7 @@ export default function VideoDetail() {
 
     // 괄호 안의 정규식과, url을 match (형식을 맞춰 봄)
     // 형식이 일치하면, match[1]을 사용해 \/ 사이의 값(videoID에 해당)만 반환
-    const match = url.match(/(?:youtu\.be\/|youtube\.com\/.*v=|youtube\.com\/embed\/|youtube\.com\/v\/|youtube\.com\/user\/.*#p\/u\/\d\/|youtube\.com\/watch\?v=|youtube\.com\/watch\?.+&v=)([^#&?\n]+)/);
+    const pattern = /(?:youtu\.be\/|youtube\.com\/.*[?&]v=|youtube\.com\/embed\/|youtube\.com\/v\/|youtube\.com\/shorts\/|youtube\.com\/user\/.*#p\/u\/\d\/|youtube\.com\/watch\?.*?v=)([a-zA-Z0-9_-]{11})/;
     return match ? match[1] : null;
   };
 
@@ -351,7 +351,7 @@ export default function VideoDetail() {
       // 🔥 YouTube API를 통해 답글 영상 정보 가져오기
       const videoDetails = await getYoutubeVideoDetails(replyVideoUrl);
       if (!videoDetails) {
-        alert("유효한 YouTube 영상이 아닙니다.");
+        alert("유효한 YouTube 영상이 아닙니다. 여기서 문제임!");
         return;
       }
   
@@ -428,7 +428,7 @@ export default function VideoDetail() {
   const getYoutubeVideoDetails = async (url) => {
     try {
       // YouTube URL에서 videoId 추출
-      const pattern = /(?:youtu\.be\/|youtube\.com\/.*v=|youtube\.com\/embed\/|youtube\.com\/v\/|youtube\.com\/user\/.*#p\/u\/\d\/|youtube\.com\/watch\?v=|youtube\.com\/watch\?.+&v=)([^#&?\n]+)/;
+      const pattern = /(?:youtu\.be\/|youtube\.com\/.*[?&]v=|youtube\.com\/embed\/|youtube\.com\/v\/|youtube\.com\/shorts\/|youtube\.com\/user\/.*#p\/u\/\d\/|youtube\.com\/watch\?.*?v=)([a-zA-Z0-9_-]{11})/;
       const match = url.match(pattern);
   
       if (!match || !match[1]) throw new Error("유효한 YouTube 링크가 아닙니다.");
