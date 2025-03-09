@@ -50,6 +50,10 @@ export default function VideoDetail() {
   const [replyVideoUrl, setReplyVideoUrl] = useState(""); // 답글 비디오 URL
   const [replyEssay, setReplyEssay] = useState(""); // 답글 에세이 내용
   const [replies, setReplies] = useState([]); // 답글 목록
+
+  // vercel 환경 변수로 저장해둔 youtube api key
+  // 반드시 "NEXT_PUBLIC_~"가 붙어야 함 
+  const API_KEY = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY;
   
 
   // useEffect: 컴포넌트가 렌더링될 때 실행되는 react hook 
