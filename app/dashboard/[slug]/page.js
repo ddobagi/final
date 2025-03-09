@@ -379,7 +379,7 @@ export default function VideoDetail() {
         views: videoDetails.views,
         likes: videoDetails.likes,
         publishedAt: videoDetails.publishedAt,
-        essay: latestEssay,
+        essay: replyEssay,
         createdAt: serverTimestamp(),
         user: userEmail,
         recommend: 0,
