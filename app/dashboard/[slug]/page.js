@@ -402,42 +402,42 @@ export default function VideoDetail() {
 
   
   const handleReplyLike = async (commentId) => {
-
     if (!auth.currentUser) return;
-    
+  
     // Firestore 경로 설정
     const userId = auth.currentUser?.uid;
     const replyRef = doc(db, "gallery", slug, "comment", commentId);
-    const userLikeRef = doc(db, "gallery", slug, "comment", commentId, "likes", userId); 
+    const userLikeRef = doc(db, "gallery", slug, "comment", commentId, "likes", userId);
   
     try {
       const likeSnap = await getDoc(userLikeRef); // 현재 사용자가 좋아요를 눌렀는지 확인
   
+      setReplies((prevReplies) =>
+        prevReplies.map((reply) =>
+          reply.id === commentId
+            ? {
+                ...reply,
+                liked: !likeSnap.exists(), // 좋아요 상태 변경
+                recommend: reply.recommend + (likeSnap.exists() ? -1 : 1), // recommend 업데이트
+              }
+            : reply
+        )
+      );
+  
       if (likeSnap.exists()) {
         // 🔥 이미 좋아요를 눌렀다면 취소
-        await updateDoc(replyRef, { recommend: increment(-1) }); // Firestore에서 likes 1 감소
+        await updateDoc(replyRef, { recommend: increment(-1) }); // Firestore에서 recommend 1 감소
         await deleteDoc(userLikeRef); // 현재 유저의 like 문서 삭제
-        
-        setReplies((prevReplies) =>
-          prevReplies.map((reply) =>
-            reply.id === commentId ? { ...reply, liked: false} : reply
-          )
-        );
       } else {
         // 🔥 좋아요 추가
-        await updateDoc(replyRef, { recommend: increment(1) }); // Firestore에서 likes 1 증가
+        await updateDoc(replyRef, { recommend: increment(1) }); // Firestore에서 recommend 1 증가
         await setDoc(userLikeRef, { liked: true }); // 현재 유저의 like 문서 추가
-  
-        setReplies((prevReplies) =>
-          prevReplies.map((reply) =>
-            reply.id === commentId ? { ...reply, liked: true} : reply
-          )
-        );
       }
     } catch (error) {
       console.error("🔥 답글 좋아요 업데이트 실패:", error);
     }
   };
+  
   
 
   const getYoutubeVideoDetails = async (url) => {
@@ -673,17 +673,17 @@ export default function VideoDetail() {
                       isEditing ? (
                         <textarea
                           className="w-full p-2 border rounded mt-2 font-nanum_pen"
-                          value={essay}
+                          value={replyEssay}
                           onChange={(e) => setReplyEssay(e.target.value)}
                         />
                       ) : (
                         <p className="mt-2 p-2 border rounded bg-gray-100 font-nanum_pen">
-                          {essay || "작성된 내용이 없습니다."}
+                          {replyEssay || "작성된 내용이 없습니다."}
                         </p>
                       )
                     ) : (
                       <p className="mt-2 p-2 border rounded bg-gray-100 font-nanum_pen">
-                        {essay || "작성된 내용이 없습니다."}
+                        {replyEssay || "작성된 내용이 없습니다."}
                       </p>
                     )}
                   </CardContent>
