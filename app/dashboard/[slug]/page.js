@@ -420,7 +420,7 @@ export default function VideoDetail() {
         
         setReplies((prevReplies) =>
           prevReplies.map((reply) =>
-            reply.id === commentId ? { ...reply, liked: false, likes: reply.likes - 1 } : reply
+            reply.id === commentId ? { ...reply, liked: false, likes: reply.recommend - 1 } : reply
           )
         );
       } else {
@@ -430,7 +430,7 @@ export default function VideoDetail() {
   
         setReplies((prevReplies) =>
           prevReplies.map((reply) =>
-            reply.id === commentId ? { ...reply, liked: true, likes: reply.likes + 1 } : reply
+            reply.id === commentId ? { ...reply, liked: true, likes: reply.recommend + 1 } : reply
           )
         );
       }
