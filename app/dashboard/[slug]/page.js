@@ -50,8 +50,6 @@ export default function VideoDetail() {
   const [replyVideoUrl, setReplyVideoUrl] = useState(""); // 답글 비디오 URL
   const [replyEssay, setReplyEssay] = useState(""); // 답글 에세이 내용
   const [replies, setReplies] = useState([]); // 답글 목록
-  const [replyLiked, setReplyLiked] = useState(false);
-  const [replyLikes, setReplyLikes] = useState(1);
 
   // vercel 환경 변수로 저장해둔 youtube api key
   // 반드시 "NEXT_PUBLIC_~"가 붙어야 함 
@@ -404,20 +402,28 @@ export default function VideoDetail() {
     const userLikeRef = doc(db, "gallery", slug, "comment", commentId, "likes", userId); 
   
     try {
-      if (liked) {
-        await updateDoc(replyRef, { recommend: increment(-1) }); // recommend 1 감소 
-        await deleteDoc(userLikeRef); // 현재 user의 like 문서 삭제 
-
-        setReplyLiked(false); // liked 상태 변수를 false로 변경 
-        setReplyLikes((prevReplyLikes) => prevReplyLikes - 1); // likes 상태 변수의 값도 1 감소 
-
-      // 아직 좋아요를 누르지 않았다면 
+      const likeSnap = await getDoc(userLikeRef); // 현재 사용자가 좋아요를 눌렀는지 확인
+  
+      if (likeSnap.exists()) {
+        // 🔥 이미 좋아요를 눌렀다면 취소
+        await updateDoc(replyRef, { likes: increment(-1) }); // Firestore에서 likes 1 감소
+        await deleteDoc(userLikeRef); // 현재 유저의 like 문서 삭제
+        
+        setReplies((prevReplies) =>
+          prevReplies.map((reply) =>
+            reply.id === commentId ? { ...reply, liked: false, likes: reply.likes - 1 } : reply
+          )
+        );
       } else {
-        await updateDoc(replyRef, { recommend: increment(1) }); // recommend 1 증가 
-        await setDoc(userLikeRef, { replyLiked: true }); // 현재 user의 like 문서를 추가하고, liked 필드를 true로 설정 
-
-        setReplyLiked(true); // liked 상태 변수르 true로 변경 
-        setReplyLikes((prevReplyLikes) => prevReplyLikes + 1); // likes 상태 변수의 값도 1 증가 
+        // 🔥 좋아요 추가
+        await updateDoc(replyRef, { likes: increment(1) }); // Firestore에서 likes 1 증가
+        await setDoc(userLikeRef, { liked: true }); // 현재 유저의 like 문서 추가
+  
+        setReplies((prevReplies) =>
+          prevReplies.map((reply) =>
+            reply.id === commentId ? { ...reply, liked: true, likes: reply.likes + 1 } : reply
+          )
+        );
       }
     } catch (error) {
       console.error("🔥 답글 좋아요 업데이트 실패:", error);
@@ -648,40 +654,10 @@ export default function VideoDetail() {
                               className="w-4 h-4 text-red-500 cursor-pointer"
                               fill={reply.liked ? "currentColor" : "none"}
                             />
-                            <span className="ml-2 text-lg font-semibold">{replyLikes}</span>
+                            <span className="ml-2 text-lg font-semibold cursor-pointer">{reply.likes}</span>
                           </button>
                         )}
                       </div>
-
-                      {/* 🔥 Essay 입력 또는 표시 */}
-                      {!isOn ? (
-                        isEditing ? (
-                          <textarea
-                            className="w-full p-2 border rounded mt-2 font-nanum_pen"
-                            value={replyEssay}
-                            onChange={(e) => setReplyEssay(e.target.value)}
-                          />
-                        ) : (
-                          <p className="mt-2 p-2 border rounded bg-gray-100 font-nanum_pen">
-                            {essay || "작성된 내용이 없습니다."}
-                          </p>
-                        )
-                      ) : (
-                        <p className="mt-2 p-2 border rounded bg-gray-100 font-nanum_pen">
-                          {essay || "작성된 내용이 없습니다."}
-                        </p>
-                      )}
-
-                      {/* 🔥 isOn이 false일 때만 버튼 표시 */}
-                      {!isOn && (
-                        <div className="flex mt-2 space-x-2 font-pretendard justify-end">
-                          {isEditing ? (
-                            <Button onClick={handleSaveEssay}>저장</Button>
-                          ) : (
-                            <Button onClick={() => setIsEditing(true)}>수정</Button>
-                          )}
-                        </div>
-                      )}
                     </div>
                   </CardContent>
                 </Card>
