@@ -369,14 +369,7 @@ export default function VideoDetail() {
         return;
       }
   
-      const repliesRef = collection(db, "gallery", slug, "comment");
-
-      // 현재 사용자가 저장한, 현재 페이지의 slug를 videoId로 가지는 video 문서의 essay 필드의 값 불러옴  
-      const updatedUserDocSnap = await getDoc(repliesRef); // 앞서 설정한 userDocRef 경로로 문서 가져옴 
-      const latestEssay = updatedUserDocSnap.data().essay || "작성된 내용이 없습니다."; // latestEssay 변수에 저장 
-
-
-      await addDoc(repliesRef, {
+      const replyData = {
         videoId: videoDetails.videoId,
         name: videoDetails.name,
         video: videoDetails.video,
@@ -389,7 +382,22 @@ export default function VideoDetail() {
         essay: latestEssay,
         user: userEmail,
         recommend: 0,
-      });
+        createdAt: serverTimestamp(),
+      }
+
+      if (!validateFirestoreData(replyData)) {
+        alert("Firestore 데이터에 문제가 있어 저장할 수 없음");
+        return;
+      }
+
+      const repliesRef = collection(db, "gallery", slug, "comment");
+
+      // 현재 사용자가 저장한, 현재 페이지의 slug를 videoId로 가지는 video 문서의 essay 필드의 값 불러옴  
+      const updatedUserDocSnap = await getDoc(repliesRef); // 앞서 설정한 userDocRef 경로로 문서 가져옴 
+      const latestEssay = updatedUserDocSnap.data().essay || "작성된 내용이 없습니다."; // latestEssay 변수에 저장 
+
+
+      await addDoc(repliesRef, replyData);
   
       // 🔥 상태 업데이트 (답글 목록 새로고침)
       setReplyVideoUrl("");
@@ -488,12 +496,37 @@ export default function VideoDetail() {
         views: viewCount,
         likes: likeCount,
         publishedAt: publishedAt.slice(0, 10),
+        createdAt: serverTimestamp(),
         recommend: 0,
       };
     } catch (error) {
       console.error("🔥 YouTube API 오류:", error);
       return null;
     }
+  };
+  
+  const validateFirestoreData = (data) => {
+    const allowedTypes = ["string", "number", "boolean", "object"]; // Firestore에서 허용하는 타입
+    const errors = [];
+  
+    Object.entries(data).forEach(([key, value]) => {
+      if (value === undefined) {
+        errors.push(`❌ [Firestore 오류] 필드 "${key}" 값이 undefined 입니다.`);
+      } else if (typeof value === "bigint") {
+        errors.push(`❌ [Firestore 오류] 필드 "${key}" 값이 BigInt (${value.toString()}) 입니다.`);
+      } else if (typeof value === "symbol") {
+        errors.push(`❌ [Firestore 오류] 필드 "${key}" 값이 Symbol 입니다.`);
+      } else if (!allowedTypes.includes(typeof value) && value !== null) {
+        errors.push(`❌ [Firestore 오류] 필드 "${key}"의 값 타입 "${typeof value}"은 Firestore에서 지원되지 않습니다.`);
+      }
+    });
+  
+    if (errors.length > 0) {
+      console.error("🔥 Firestore 데이터 유효성 검사 실패:");
+      errors.forEach((error) => console.error(error));
+      return false;
+    }
+    return true;
   };
   
 
