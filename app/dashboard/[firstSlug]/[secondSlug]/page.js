@@ -73,8 +73,8 @@ export default function SecondSlugPage() {
             setIsOn(true);
 
             try {
-                // 현재 페이지의 slug 값과 mode 값에 알맞게 fetchVideoData 함수 실행 
-                await fetchVideoData(firstSlug, mode);
+                // 현재 페이지의 slug 값에 알맞게 fetchVideoData 함수 실행 
+                await fetchVideoData(firstSlug);
             } catch (error) {
                 console.error("사용자 Mode 데이터를 가져오는 중 오류 발생:", error);
                 await fetchVideoData(firstSlug, false);
@@ -110,7 +110,7 @@ export default function SecondSlugPage() {
   };  
 
   // 동적 라우팅 페이지에 표시할 video 데이터들을 fetch 해옴 
-  const fetchVideoData = async (firstSlug, secondSlug, mode) => {
+  const fetchVideoData = async (firstSlug, secondSlug) => {
 
     if (!auth.currentUser) return;
 
@@ -118,7 +118,7 @@ export default function SecondSlugPage() {
         // 일단 로딩 걸어 둠 
         setLoading(true);
 
-        // mode 값에 따라 상이한 db 경로에서 문서를 불러옴 
+        // db 경로에서 문서를 불러옴 
         const userId = auth.currentUser?.uid;
         let docRef = doc(db, "gallery", firstSlug, "comment", secondSlug);
         const docSnap = await getDoc(docRef);
@@ -135,23 +135,16 @@ export default function SecondSlugPage() {
             throw new Error("해당 비디오를 찾을 수 없습니다.");
         }
 
-        // 만약 public 모드라면 
-        if (mode) {
+        // 불러온 문서에서 recommend 데이터도 가져와 likes 상태 변수에 저장 
+        const videoData = docSnap.data();
+        setLikes(videoData.recommend || 0);
 
-          // 불러온 문서에서 recommend 데이터도 가져와 likes 상태 변수에 저장 
-          const videoData = docSnap.data();
-          setLikes(videoData.recommend || 0);
+        // Promise.all: 두 개의 firestore 요청을 한 번에 처리. api 호출 최적화 
+        // userLikeSnap과 userDocSnap에 private 모드와 public 모드의 db 경로를 각각 저장 
+        const userLikeSnap = await getDoc(doc(db, "gallery", firstSlug, "comment", secondSlug, "likes", userId));
 
-          // Promise.all: 두 개의 firestore 요청을 한 번에 처리. api 호출 최적화 
-          // userLikeSnap과 userDocSnap에 private 모드와 public 모드의 db 경로를 각각 저장 
-          const userId = auth.currentUser?.uid;
-          const [userLikeSnap, userDocSnap] = await Promise.all([
-            getDoc(doc(db, "gallery", firstSlug, "comment", secondSlug, "likes", userId)),
-          ]);
-
-          // 만약 현재 페이지의 영상에 대한, 현재 user의 likes 필드가 존재한다면 liked 상태 변수를 true로 설정 
-          setLiked(userLikeSnap.exists());
-        }
+        // 만약 현재 페이지의 영상에 대한, 현재 user의 likes 필드가 존재한다면 liked 상태 변수를 true로 설정 
+        setLiked(userLikeSnap.exists());
     } catch (error) {
         console.error("Firestore에서 비디오 데이터 가져오는 중 오류 발생: ", error);
         setError(error.message);
