@@ -163,7 +163,7 @@ export default function VideoDetail() {
   }, [firstSlug, isOn]);
 
   useEffect(() => {
-    if (isOn) {
+    if (true) {
       const fetchMyReplies = async () => {
         try {
 
