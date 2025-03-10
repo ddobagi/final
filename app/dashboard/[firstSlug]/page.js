@@ -69,6 +69,7 @@ export default function VideoDetail() {
         if (currentUser) {
             setUser(currentUser);
             setUserEmail(currentUser.email);
+            console.log(currentUser.email);
             console.log(firstSlug);
 
             try {
