@@ -69,6 +69,7 @@ export default function VideoDetail() {
             setUser(currentUser);
             setUserEmail(currentUser.email);
             setLoading(true);
+            console.log(firstSlug)
 
             try {
                 // 현재 user 정보를 가져옴 
