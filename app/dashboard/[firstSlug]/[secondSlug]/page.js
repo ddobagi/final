@@ -163,10 +163,6 @@ export default function SecondSlugPage() {
       const q = query(collection(db, "gallery", firstSlug, "comment"), where("video", "==", video.video)); // db 경로 설정 
       const querySnapshot = await getDocs(q); // 해당 경로의 문서 가져옴 
 
-      const batch = writeBatch(db); // 한 번에 firestore 작업을 처리하기 위한 batch생성 
-      querySnapshot.forEach((doc) => batch.delete(doc.ref)); // 반복문을 돌면서 querySnapshot의 여러 문서에 대한 삭제 예약
-      await batch.commit(); // 한 번에 삭제 처리 
-
       // isPosted 상태 변수는 false로, isEditing 상태 변수도 false로 변경 
       setIsPosted(false);
       setIsEditing(false);
