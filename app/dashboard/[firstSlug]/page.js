@@ -711,23 +711,6 @@ export default function VideoDetail() {
                       </div>
                       <p className="text-sm text-gray-500 mt-2">{reply.views} views · {new Date(reply.publishedAt).toLocaleDateString()}</p>
                     </Link>
-                    {/* 🔥 답글 좋아요 버튼 */}
-                    <div className="mt-4">
-                      <div className="flex items-center justify-between">
-                        { isOn && (
-                            <button
-                            className="flex items-center p-2 rounded-lg transition"
-                            onClick={() => handleReplyLike(reply.id)}
-                          >
-                            <Heart
-                              className="w-4 h-4 text-red-500 cursor-pointer"
-                              fill={reply.liked ? "currentColor" : "none"}
-                            />
-                            <span className="ml-2 text-lg font-semibold cursor-pointer">{reply.recommend}</span>
-                          </button>
-                        )}
-                      </div>
-                    </div>
                   </CardContent>
                 </Card>
               ))}
