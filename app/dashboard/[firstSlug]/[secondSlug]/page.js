@@ -302,120 +302,122 @@ const handleTogglePost = async () => {
         </div>
       </div>
 
-      {video && (
-        <Card className="rounded-lg shadow-lg w-full max-w-2xl">
-          <div className="relative w-full aspect-video">
-            <iframe
-              className="w-full h-full rounded-t-lg"
-              src={`https://www.youtube.com/embed/${getYouTubeVideoID(video.video)}?autoplay=0&controls=1`}
-              title={video.title}
-              frameBorder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-            ></iframe>
-          </div>
-          <CardContent className="p-4">
-            <h1 className="text-xl font-bold mb-2">{video.title}</h1>
-            <h3 className="text-lg font-bold mb-2">{video.name}</h3>
-            <div className="flex items-center justify-between w-full">
-              <div className="flex items-center">
-                <Image src={video.channelProfile} alt="Channel Profile" width={40} height={40} className="rounded-full mr-3" />
-                <span className="text-lg font-semibold">{video.channel}</span>
-              </div>
-              <div className="flex items-center">
-                <ThumbsUp className="w-5 h-5 text-gray-500 mr-1" />
-                <span className="text-gray-600">{video.likes}</span>
-              </div>
+      <div className="flex items-center justify-between max-w-[600px] w-full h-16 px-4 bg-transparent border border-gray-500 rounded text-white">
+        {video && (
+          <Card className="rounded-lg shadow-lg w-full max-w-2xl">
+            <div className="relative w-full aspect-video">
+              <iframe
+                className="w-full h-full rounded-t-lg"
+                src={`https://www.youtube.com/embed/${getYouTubeVideoID(video.video)}?autoplay=0&controls=1`}
+                title={video.title}
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              ></iframe>
             </div>
-            <p className="text-sm text-gray-500 mt-2">{video.views} views · {new Date(video.publishedAt).toLocaleDateString()}</p>
-            
-            {/* Essay 입력 및 수정 */}
-
-            <div className="mt-4">
-              <div className = "flex items-center justify-between">
-                <h2 className="text-lg font-semibold font-nanum_pen">Essay</h2>
-
-                {/* 🔥 isOn이 true일 때 좋아요 버튼 표시 */}
-                {isOn && (
-                  <button
-                    className="flex items-center p-2 rounded-lg transition"
-                    onClick={handleLike}
-                  >
-                    <Heart className="w-4 h-4 text-red-500 cursor-pointer" fill={liked ? "currentColor" : "none"} />
-                    <span className="ml-2 text-lg font-semibold cursor-pointer">{likes}</span>
-                  </button>
-                )}
+            <CardContent className="p-4">
+              <h1 className="text-xl font-bold mb-2">{video.title}</h1>
+              <h3 className="text-lg font-bold mb-2">{video.name}</h3>
+              <div className="flex items-center justify-between w-full">
+                <div className="flex items-center">
+                  <Image src={video.channelProfile} alt="Channel Profile" width={40} height={40} className="rounded-full mr-3" />
+                  <span className="text-lg font-semibold">{video.channel}</span>
+                </div>
+                <div className="flex items-center">
+                  <ThumbsUp className="w-5 h-5 text-gray-500 mr-1" />
+                  <span className="text-gray-600">{video.likes}</span>
+                </div>
               </div>
+              <p className="text-sm text-gray-500 mt-2">{video.views} views · {new Date(video.publishedAt).toLocaleDateString()}</p>
+              
+              {/* Essay 입력 및 수정 */}
 
-              {/* 🔥 Essay 입력 또는 표시 */}
-              {true ? (
-                isEditing ? (
-                  <textarea
-                    className="w-full p-2 border rounded mt-2 font-nanum_pen"
-                    value={essay}
-                    onChange={(e) => setEssay(e.target.value)}
-                  />
+              <div className="mt-4">
+                <div className = "flex items-center justify-between">
+                  <h2 className="text-lg font-semibold font-nanum_pen">Essay</h2>
+
+                  {/* 🔥 isOn이 true일 때 좋아요 버튼 표시 */}
+                  {isOn && (
+                    <button
+                      className="flex items-center p-2 rounded-lg transition"
+                      onClick={handleLike}
+                    >
+                      <Heart className="w-4 h-4 text-red-500 cursor-pointer" fill={liked ? "currentColor" : "none"} />
+                      <span className="ml-2 text-lg font-semibold cursor-pointer">{likes}</span>
+                    </button>
+                  )}
+                </div>
+
+                {/* 🔥 Essay 입력 또는 표시 */}
+                {true ? (
+                  isEditing ? (
+                    <textarea
+                      className="w-full p-2 border rounded mt-2 font-nanum_pen"
+                      value={essay}
+                      onChange={(e) => setEssay(e.target.value)}
+                    />
+                  ) : (
+                    <p className="mt-2 p-2 border rounded bg-gray-100 font-nanum_pen">
+                      {essay || "작성된 내용이 없습니다."}
+                    </p>
+                  )
                 ) : (
                   <p className="mt-2 p-2 border rounded bg-gray-100 font-nanum_pen">
                     {essay || "작성된 내용이 없습니다."}
                   </p>
-                )
-              ) : (
-                <p className="mt-2 p-2 border rounded bg-gray-100 font-nanum_pen">
-                  {essay || "작성된 내용이 없습니다."}
-                </p>
-              )}
+                )}
 
-              {/* 🔥 isOn이 false일 때만 버튼 표시 */}
-              { (userEmail == video.user) && (
-                <div className="flex mt-2 space-x-2 font-pretendard justify-end">
-                  {isEditing ? (
-                    <Button onClick={handleSaveEssay}>저장</Button>
-                  ) : (
-                    <Button onClick={() => setIsEditing(true)}>수정</Button>
-                  )}
-                  <Button onClick={handleTogglePost} className="bg-blue-500 text-white">
-                    {isPosted ? "게시 취소" : "게시"}
-                  </Button>
-                </div>
-              )}
-            </div>
-          </CardContent>
-          {(userEmail == video.user) && (
-                <button
-                  onClick={async () => {
-                    if (!video || !video.video) return alert("삭제할 비디오 데이터가 없습니다.");
-                    if (!user?.uid) return alert("사용자 정보가 없습니다.");
+                {/* 🔥 isOn이 false일 때만 버튼 표시 */}
+                { (userEmail == video.user) && (
+                  <div className="flex mt-2 space-x-2 font-pretendard justify-end">
+                    {isEditing ? (
+                      <Button onClick={handleSaveEssay}>저장</Button>
+                    ) : (
+                      <Button onClick={() => setIsEditing(true)}>수정</Button>
+                    )}
+                    <Button onClick={handleTogglePost} className="bg-blue-500 text-white">
+                      {isPosted ? "게시 취소" : "게시"}
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+            {(userEmail == video.user) && (
+                  <button
+                    onClick={async () => {
+                      if (!video || !video.video) return alert("삭제할 비디오 데이터가 없습니다.");
+                      if (!user?.uid) return alert("사용자 정보가 없습니다.");
 
-                    try {
-                      const batch = writeBatch(db);
+                      try {
+                        const batch = writeBatch(db);
 
-                      // users/{user.uid}/videos에서 video.video와 일치하는 문서 찾기
-                      const userVideosRef = collection(db, "gallery", firstSlug, "comment");
-                      const userQuery = query(userVideosRef, where("video", "==", video.video));
-                      const userQuerySnapshot = await getDocs(userQuery);
+                        // users/{user.uid}/videos에서 video.video와 일치하는 문서 찾기
+                        const userVideosRef = collection(db, "gallery", firstSlug, "comment");
+                        const userQuery = query(userVideosRef, where("video", "==", video.video));
+                        const userQuerySnapshot = await getDocs(userQuery);
 
-                      userQuerySnapshot.forEach((doc) => {
-                        batch.delete(doc.ref); // 🔥 users/{user.uid}/videos 문서 삭제
-                      });
+                        userQuerySnapshot.forEach((doc) => {
+                          batch.delete(doc.ref); // 🔥 users/{user.uid}/videos 문서 삭제
+                        });
 
-                      // 🔥 모든 삭제 작업 실행
-                      await batch.commit();
+                        // 🔥 모든 삭제 작업 실행
+                        await batch.commit();
 
-                      alert("비디오가 삭제되었습니다.");
-                      router.push("/dashboard");
-                    } catch (error) {
-                      console.error("비디오 삭제 중 오류 발생: ", error);
-                      alert("삭제 중 오류가 발생했습니다.");
-                    }
-                  }}
-                  className="z-5 absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full shadow-md hover:bg-red-600"
-                >
-                  <Trash2 size={32} />
-                </button>
-              )}
-        </Card>
-      )}
+                        alert("비디오가 삭제되었습니다.");
+                        router.push("/dashboard");
+                      } catch (error) {
+                        console.error("비디오 삭제 중 오류 발생: ", error);
+                        alert("삭제 중 오류가 발생했습니다.");
+                      }
+                    }}
+                    className="z-5 absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full shadow-md hover:bg-red-600"
+                  >
+                    <Trash2 size={32} />
+                  </button>
+                )}
+          </Card>
+        )}
+      </div>
     </div>
   );
 }
