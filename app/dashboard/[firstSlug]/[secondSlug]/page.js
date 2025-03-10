@@ -111,7 +111,6 @@ export default function SecondSlugPage() {
         // db 경로에서 문서를 불러옴 
         const q = query(
           collection(db, "gallery", firstSlug, "comment"),
-          where("isPosted", "==", true),
           where("__name__", "==", secondSlug) // 특정 문서만 가져오기 위해 ID 필터 추가
         );
         console.log("1번 오류");
@@ -125,7 +124,6 @@ export default function SecondSlugPage() {
             const videoData = docSnap.data();
             setVideo(videoData);
             setEssay(videoData.essay || "");
-            setIsPosted(videoData.isPosted || false);
             setLikes(videoData.recommend || 0);
             console.log("2번 오류");
             console.log(videoData);
