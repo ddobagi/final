@@ -158,7 +158,7 @@ export default function VideoDetail() {
   
       fetchReplies();
     }
-  }, [firstSlug, isOn]);
+  }, [firstSlug, isOn, replies]);
 
   useEffect(() => {
     if (isOn) {
@@ -195,7 +195,7 @@ export default function VideoDetail() {
   
       fetchMyReplies();
     }
-  }, [firstSlug, isOn, userEmail]);
+  }, [firstSlug, isOn, userEmail, myReplies]);
   
   
 

@@ -372,8 +372,7 @@ const handleTogglePost = async () => {
                 </div>
               )}
             </div>
-          </CardContent>
-          {(userEmail == video.user) && (
+            {(userEmail == video.user) && (
                 <button
                   onClick={async () => {
                     if (!video || !video.video) return alert("삭제할 비디오 데이터가 없습니다.");
@@ -406,6 +405,7 @@ const handleTogglePost = async () => {
                   <Trash2 size={32} />
                 </button>
               )}
+          </CardContent>
         </Card>
       )}
     </div>
