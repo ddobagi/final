@@ -626,7 +626,7 @@ export default function VideoDetail() {
             <div className="mt-4">
               <h3 className="text-lg font-semibold">답글 목록</h3>
               {replies.map((reply) => (
-                <Link key={reply.id} href={`/dashboard/${video.id}/${reply.id}`} passHref>
+                <Link key={reply.id} href={`/dashboard/${video.title}/${reply.id}`} passHref>
                   <Card key={reply.id} className="mt-3 w-full max-w-2xl">
                     <div className="relative w-full aspect-video">
                       <iframe
