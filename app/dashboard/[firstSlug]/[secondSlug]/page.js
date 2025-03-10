@@ -218,7 +218,7 @@ export default function SecondSlugPage() {
     <div className="flex flex-col items-center w-full p-6">
       <div className="w-full max-w-2xl flex justify-between">
         <button className="flex items-center mb-2">
-          <ArrowLeft className="w-6 h-6 mr-2 cursor-pointer" />
+          <ArrowLeft onClick={() => router.push(`/dashboard/${firstSlug}`)} className="w-6 h-6 mr-2 cursor-pointer" />
         </button>
         <div className="flex items-center max-w-[600px] w-full h-10 space-x-2 justify-end">
           <p className="text-gray-500 text-sm font-pretendard">{getEmailUsername(userEmail)} 님</p>
