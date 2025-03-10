@@ -43,6 +43,6 @@ export default function SecondSlugPage() {
   }, [firstSlug, secondSlug, router]);
 
   return (
-    <p>firstSlug: {firstSlug} // secondSlug: {secondSlug}</p>
+    <p>firstSlug: {firstSlug} and secondSlug: {secondSlug}</p>
   )
 }

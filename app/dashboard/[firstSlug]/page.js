@@ -155,6 +155,10 @@ export default function VideoDetail() {
   }, [firstSlug, isOn]);
   
 
+  useEffect(() => {
+    fetchVideoData(firstSlug, isOn);
+  }, [firstSlug, isOn, fetchVideoData]); // ✅ fetchVideoData 추가
+  
 
 
   // 동적 라우팅 페이지에 표시할 video 데이터들을 fetch 해옴 
