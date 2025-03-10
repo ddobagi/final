@@ -70,6 +70,7 @@ export default function ReplyDetail() {
       setLoading(true);
       
       // Firestore에서 gallery/[firstSlug]/comment/[commentId] 문서 가져오기
+      console.log("1번 못 찾음!");
       const docRef = doc(db, "gallery", firstSlug, "comment", commentId);
       const docSnap = await getDoc(docRef);
 
@@ -94,6 +95,7 @@ export default function ReplyDetail() {
     if (!auth.currentUser) return;
 
     try {
+      console.log("2번 못 찾음");
       const docRef = doc(db, "gallery", firstSlug, "comment", commentId);
       await updateDoc(docRef, { essay });
 
