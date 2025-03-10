@@ -616,7 +616,7 @@ export default function VideoDetail() {
       {isOn && (
         <div className="mt-4">
           <Button onClick={() => setReplying(!replying)} className="w-full">
-            {replying ? "답글 취소" : "답글 달기"}
+            {replying ? "나중에 보태기" : "낭만 보태기"}
           </Button>
 
           {replying && (
