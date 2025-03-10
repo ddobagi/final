@@ -13,7 +13,7 @@ import { auth, db } from "@/lib/firebase";
 export default function SecondSlugPage() {
 
   // URL에서 firstSlug와 commentId 가져오기
-  const params = useParams(); 
+  const { firstSlug, secondSlug } = useParams(); 
 
   // useRouter(): 페이지 이동을 관리하는 hook 
   const router = useRouter();
@@ -31,7 +31,7 @@ export default function SecondSlugPage() {
         setUser(currentUser);
         setUserEmail(currentUser.email);
         setLoading(true);
-        console.log(params);
+        console.log(firstSlug, secondSlug);
       } else {
         console.log("❌ 로그인되지 않음");
         router.push("/");
@@ -41,9 +41,9 @@ export default function SecondSlugPage() {
     });
 
     return () => unsubscribe();
-  }, [params, router]);
+  }, [firstSlug, secondSlug, router]);
 
   return (
-    <p>{params}</p>
+    <p>제발!</p>
   )
 }
