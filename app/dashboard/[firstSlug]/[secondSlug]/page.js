@@ -97,7 +97,7 @@ export default function SecondSlugPage() {
     return () => unsubscribe();
   
   // 의존성 배열에 slug와 router 포함 -> slug 값이 변경될 때마다 & router 값이 변경될 때마다 실행
-  }, [firstSlug, secondSlug, router]);
+  }, [firstSlug, secondSlug, router, isPosted]);
 
   // url을 입력 받아 videoID만 추출하는 함수 (input: url)
   const getYouTubeVideoID = (url) => {
@@ -373,6 +373,39 @@ const handleTogglePost = async () => {
               )}
             </div>
           </CardContent>
+          {(userEmail == video.user) && (
+                <button
+                  onClick={async () => {
+                    if (!video || !video.video) return alert("삭제할 비디오 데이터가 없습니다.");
+                    if (!user?.uid) return alert("사용자 정보가 없습니다.");
+
+                    try {
+                      const batch = writeBatch(db);
+
+                      // users/{user.uid}/videos에서 video.video와 일치하는 문서 찾기
+                      const userVideosRef = collection(db, "gallery", firstSlug, "comment");
+                      const userQuery = query(userVideosRef, where("video", "==", video.video));
+                      const userQuerySnapshot = await getDocs(userQuery);
+
+                      userQuerySnapshot.forEach((doc) => {
+                        batch.delete(doc.ref); // 🔥 users/{user.uid}/videos 문서 삭제
+                      });
+
+                      // 🔥 모든 삭제 작업 실행
+                      await batch.commit();
+
+                      alert("비디오가 삭제되었습니다.");
+                      router.push("/dashboard");
+                    } catch (error) {
+                      console.error("비디오 삭제 중 오류 발생: ", error);
+                      alert("삭제 중 오류가 발생했습니다.");
+                    }
+                  }}
+                  className="z-5 absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full shadow-md hover:bg-red-600"
+                >
+                  <Trash2 size={32} />
+                </button>
+              )}
         </Card>
       )}
     </div>
