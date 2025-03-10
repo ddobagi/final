@@ -442,16 +442,13 @@ export default function VideoDetail() {
   
       // 🔥 Firestore에서 isPosted가 true인 답글만 가져오기
       const q = query(repliesRef, where("isPosted", "==", true));
-      const querySnapshot = await getDocs(q);
-  
-      // 🔥 가져온 데이터 중 isPosted가 true인 것만 필터링 (2차 검증)
-      const filteredReplies = querySnapshot.docs
-        .map((doc) => ({ id: doc.id, ...doc.data() }))
-        .filter((reply) => reply.isPosted === true);
-  
-      setReplies(filteredReplies);
+      const querySnapshot = await getDocs(q);  
+      setReplies(querySnapshot.docs);
 
-      fetchMyReplies();
+      const x = query(repliesRef, where("isPosted", "==", false), where("user","==",userEmail));
+      const query = await getDocs(x);  
+      setMyReplies(query.docs);
+
     } catch (error) {
       console.error("🔥 답글 저장 오류: ", error);
     }
