@@ -50,7 +50,6 @@ export default function ReplyDetail() {
         setUser(currentUser);
         setUserEmail(currentUser.email);
         setLoading(true);
-        await fetchReplyData();
         console.log(firstSlug, commentId);
       } else {
         console.log("❌ 로그인되지 않음");
