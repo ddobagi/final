@@ -70,8 +70,7 @@ export default function SecondSlugPage() {
 
                 // 해당 문서 Mode 필드의 값이 public이면 mode = true, 아니면 mode = false
                 // isOn 값도 mode 값에 따라 변경 
-                const post = userDocSnap.exists() && userDocSnap.data().isPosted === "true";  
-                setIsPosted(post);
+                setIsPosted(userDocSnap.data().isPosted);
 
 
                 // 현재 페이지의 slug 값에 알맞게 fetchVideoData 함수 실행 
@@ -372,7 +371,8 @@ const handleTogglePost = async () => {
                 </div>
               )}
             </div>
-            {(userEmail == video.user) && (
+          </CardContent>
+          {(userEmail == video.user) && (
                 <button
                   onClick={async () => {
                     if (!video || !video.video) return alert("삭제할 비디오 데이터가 없습니다.");
@@ -405,7 +405,6 @@ const handleTogglePost = async () => {
                   <Trash2 size={32} />
                 </button>
               )}
-          </CardContent>
         </Card>
       )}
     </div>
