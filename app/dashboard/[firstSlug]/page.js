@@ -158,7 +158,7 @@ export default function VideoDetail() {
   
       fetchReplies();
     }
-  }, [firstSlug, isOn, replies]);
+  }, [firstSlug, isOn]);
 
   useEffect(() => {
     if (isOn) {
@@ -195,7 +195,7 @@ export default function VideoDetail() {
   
       fetchMyReplies();
     }
-  }, [firstSlug, isOn, userEmail, myReplies]);
+  }, [firstSlug, isOn, userEmail]);
   
   
 
@@ -450,6 +450,8 @@ export default function VideoDetail() {
         .filter((reply) => reply.isPosted === true);
   
       setReplies(filteredReplies);
+
+      fetchMyReplies();
     } catch (error) {
       console.error("🔥 답글 저장 오류: ", error);
     }
