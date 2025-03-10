@@ -391,6 +391,7 @@ export default function VideoDetail() {
       setReplyVideoUrl("");
       setReplyEssay("");
       setReplying(false);
+      setIsPosted(false);
   
       const querySnapshot = await getDocs(repliesRef);
       setReplies(querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
