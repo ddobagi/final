@@ -551,14 +551,6 @@ export default function VideoDetail() {
     }
   };
   
-  const sortedReplies = [...replies].sort((a, b) => {
-      return Number(b.recommend) - Number(a.recommend); // isOn이 true이면 recommend를 기준으로 정렬, recommend가 많은 것(b)부터 정렬 
-  });
-
-  const sortedMyReplies = [...myReplies].sort((a, b) => {
-    return Number(b.createdAt) - Number(a.createdAt); // isOn이 true이면 recommend를 기준으로 정렬, recommend가 많은 것(b)부터 정렬 
-});
-
 
   if (loading) return <p className="text-center mt-10">로딩 중...</p>;
   if (error) return <p className="text-center mt-10 text-red-500">{error}</p>;
@@ -688,7 +680,7 @@ export default function VideoDetail() {
           )}
 
           {/* 🔥 작성 중이던 리스트 표시 */}
-          {sortedMyReplies.length > 0 && (
+          {myReplies.length > 0 && (
             <div className="mt-4">
               <h3 className="text-lg font-semibold">작성 중인 댓글 목록</h3>
               {myReplies.map((reply) => (
@@ -719,6 +711,23 @@ export default function VideoDetail() {
                       </div>
                       <p className="text-sm text-gray-500 mt-2">{reply.views} views · {new Date(reply.publishedAt).toLocaleDateString()}</p>
                     </Link>
+                    {/* 🔥 답글 좋아요 버튼 */}
+                    <div className="mt-4">
+                      <div className="flex items-center justify-between">
+                        { isOn && (
+                            <button
+                            className="flex items-center p-2 rounded-lg transition"
+                            onClick={() => handleReplyLike(reply.id)}
+                          >
+                            <Heart
+                              className="w-4 h-4 text-red-500 cursor-pointer"
+                              fill={reply.liked ? "currentColor" : "none"}
+                            />
+                            <span className="ml-2 text-lg font-semibold cursor-pointer">{reply.recommend}</span>
+                          </button>
+                        )}
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
               ))}
@@ -728,7 +737,7 @@ export default function VideoDetail() {
 
 
           {/* 🔥 기존 답글 리스트 표시 */}
-          {sortedReplies.length > 0 && (
+          {replies.length > 0 && (
             <div className="mt-4">
               <h3 className="text-lg font-semibold">전체 댓글 목록</h3>
               {replies.map((reply) => (
