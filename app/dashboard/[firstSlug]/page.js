@@ -378,7 +378,10 @@ export default function VideoDetail() {
         alert("유효한 YouTube 영상이 아닙니다.");
         return;
       }
+  
       const repliesRef = collection(db, "gallery", firstSlug, "comment");
+  
+      // 🔥 Firestore에 새로운 답글 추가 (isPosted 기본값: false)
       await addDoc(repliesRef, {
         videoId: videoDetails.videoId,
         name: videoDetails.name,
@@ -396,17 +399,26 @@ export default function VideoDetail() {
         isPosted: false,
       });
   
-      // 🔥 상태 업데이트 (답글 목록 새로고침)
+      // 🔥 상태 업데이트 (입력 필드 초기화)
       setReplyVideoUrl("");
       setReplyEssay("");
       setReplying(false);
   
-      const querySnapshot = await getDocs(repliesRef);
-      setReplies(querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
+      // 🔥 Firestore에서 isPosted가 true인 답글만 가져오기
+      const q = query(repliesRef, where("isPosted", "==", true));
+      const querySnapshot = await getDocs(q);
+  
+      // 🔥 가져온 데이터 중 isPosted가 true인 것만 필터링 (2차 검증)
+      const filteredReplies = querySnapshot.docs
+        .map((doc) => ({ id: doc.id, ...doc.data() }))
+        .filter((reply) => reply.isPosted === true);
+  
+      setReplies(filteredReplies);
     } catch (error) {
       console.error("🔥 답글 저장 오류: ", error);
     }
   };
+  
   
 
   
@@ -611,13 +623,13 @@ export default function VideoDetail() {
             <div className="mt-3 p-3 border rounded-lg bg-gray-50">
               <input
                 type="text"
-                placeholder="유튜브 URL 입력"
+                placeholder="Youtube URL"
                 className="w-full p-2 border rounded"
                 value={replyVideoUrl}
                 onChange={(e) => setReplyVideoUrl(e.target.value)}
               />
               <textarea
-                placeholder="에세이 입력"
+                placeholder="Essay"
                 className="w-full mt-2 p-2 border rounded"
                 value={replyEssay}
                 onChange={(e) => setReplyEssay(e.target.value)}
