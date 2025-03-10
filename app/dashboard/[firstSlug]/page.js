@@ -172,6 +172,7 @@ export default function VideoDetail() {
           const q = query(
             repliesRef, 
             where("isPosted", "==", false),
+            where("user", "==", userEmail)
           );
   
           // ✅ 쿼리 실행
