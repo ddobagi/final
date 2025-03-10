@@ -68,7 +68,6 @@ export default function SecondSlugPage() {
                 await fetchVideoData(firstSlug, secondSlug);
             } catch (error) {
                 console.error("사용자 Mode 데이터를 가져오는 중 오류 발생:", error);
-                await fetchVideoData(firstSlug, false);
             }
         } else {
             console.log("❌ 로그인되지 않음");

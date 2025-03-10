@@ -626,8 +626,8 @@ export default function VideoDetail() {
             <div className="mt-4">
               <h3 className="text-lg font-semibold">답글 목록</h3>
               {replies.map((reply) => (
-                <Link key={reply.id} href={`/dashboard/${firstSlug}/${reply.id}`} passHref>
-                  <Card key={reply.id} className="mt-3 w-full max-w-2xl">
+                <Card key={reply.id} className="mt-3 w-full max-w-2xl">
+                  <Link key={reply.id} href={`/dashboard/${firstSlug}/${reply.id}`} passHref>
                     <div className="relative w-full aspect-video">
                       <iframe
                         className="w-full h-full rounded-t-lg"
@@ -637,7 +637,9 @@ export default function VideoDetail() {
                         allowFullScreen
                       ></iframe>
                     </div>
-                    <CardContent className="p-4">
+                  </Link>
+                  <CardContent className="p-4">
+                    <Link key={reply.id} href={`/dashboard/${firstSlug}/${reply.id}`} passHref>
                       <h3 className="text-lg font-bold mb-2">{reply.name}</h3>
                       <div className="flex items-center justify-between w-full">
                         <div className="flex items-center">
@@ -650,32 +652,27 @@ export default function VideoDetail() {
                         </div>
                       </div>
                       <p className="text-sm text-gray-500 mt-2">{reply.views} views · {new Date(reply.publishedAt).toLocaleDateString()}</p>
-
-                      {/* 🔥 답글 좋아요 버튼 */}
-                      <div className="mt-4">
-                        <div className="flex items-center justify-between">
-                          <h2 className="text-lg font-semibold font-nanum_pen">Essay</h2>
-                          { isOn && (
-                              <button
-                              className="flex items-center p-2 rounded-lg transition"
-                              onClick={() => handleReplyLike(reply.id)}
-                            >
-                              <Heart
-                                className="w-4 h-4 text-red-500 cursor-pointer"
-                                fill={reply.liked ? "currentColor" : "none"}
-                              />
-                              <span className="ml-2 text-lg font-semibold cursor-pointer">{reply.recommend}</span>
-                            </button>
-                          )}
-                        </div>
-                        <p className="mt-2 p-2 border rounded bg-gray-100 font-nanum_pen">
-                          {reply.essay || "작성된 내용이 없다??."}
-                        </p>
+                    </Link>
+                    {/* 🔥 답글 좋아요 버튼 */}
+                    <div className="mt-4">
+                      <div className="flex items-center justify-between">
+                        <h2 className="text-lg font-semibold font-nanum_pen">Essay</h2>
+                        { isOn && (
+                            <button
+                            className="flex items-center p-2 rounded-lg transition"
+                            onClick={() => handleReplyLike(reply.id)}
+                          >
+                            <Heart
+                              className="w-4 h-4 text-red-500 cursor-pointer"
+                              fill={reply.liked ? "currentColor" : "none"}
+                            />
+                            <span className="ml-2 text-lg font-semibold cursor-pointer">{reply.recommend}</span>
+                          </button>
+                        )}
                       </div>
-
-                    </CardContent>
-                  </Card>
-                </Link>
+                    </div>
+                  </CardContent>
+                </Card>
               ))}
             </div>
           )}
