@@ -393,13 +393,13 @@ export default function VideoDetail() {
         createdAt: serverTimestamp(),
         user: userEmail,
         recommend: 0,
+        isPosted: false,
       });
   
       // 🔥 상태 업데이트 (답글 목록 새로고침)
       setReplyVideoUrl("");
       setReplyEssay("");
       setReplying(false);
-      setIsPosted(false);
   
       const querySnapshot = await getDocs(repliesRef);
       setReplies(querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
