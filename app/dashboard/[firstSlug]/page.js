@@ -168,11 +168,12 @@ export default function VideoDetail() {
         try {
 
           const repliesRef = collection(db, "gallery", firstSlug, "comment");
+          const currentUserEmail = auth.currentUser.email;
 
           const q = query(
             repliesRef, 
             where("isPosted", "==", false),
-            where("user", "==", userEmail)
+            where("user", "==", currentUserEmail)
           );
   
           // ✅ 쿼리 실행
