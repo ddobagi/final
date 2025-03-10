@@ -174,8 +174,17 @@ export default function SecondSlugPage() {
 
       // 수정 시, gallery 컬렉션에서 해당 영상은 일단 삭제 (수정 후 다시 게시)
       // firestore db의 gallery 컬렉션에서, video 필드의 값이 video.video와 일치하는 것(즉 동일한 url을 가지는 것)만 query하도록
-      const q = query(collection(db, "gallery", firstSlug, "comment"), where("video", "==", video.video)); // db 경로 설정 
-      const querySnapshot = await getDocs(q); // 해당 경로의 문서 가져옴 
+      const q = query(collection(db, "gallery", firstSlug, "comment"), where("video", "==", video.video));
+      const querySnapshot = await getDocs(q); // 🔥 Firestore에서 쿼리 실행
+      
+      // 🔥 querySnapshot을 순회하면서 각 문서 업데이트
+      const batch = writeBatch(db); // 🔥 Firestore의 batch 사용
+      querySnapshot.forEach((doc) => {
+        batch.update(doc.ref, { isPosted: false });
+      });
+      
+      await batch.commit(); // ✅ 한 번에 업데이트 실행
+      
 
       // isPosted 상태 변수는 false로, isEditing 상태 변수도 false로 변경 
       setIsPosted(false);
