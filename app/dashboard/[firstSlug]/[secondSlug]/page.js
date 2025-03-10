@@ -20,10 +20,11 @@ import { Button } from "@/components/ui/button";
 import { ThumbsUp, ArrowLeft, Heart } from "lucide-react";
 
 // export default: 다른 곳에서 import 할 수 있는 함수형 컴포넌트를 정의 
-export default function ReplyDetail() {
+export default function secondSlugPage() {
 
   // URL에서 firstSlug와 commentId 가져오기
-  const { firstSlug, secondSlug } = useParams("https://final-nine-ruddy.vercel.app/dashboard/Gi46b9ZAdZbQ65XZ46PI/ddddddddd"); 
+  const { firstSlug, secondSlug } = useParams(); 
+  console.log("✅ useParams():", params); // 콘솔에서 확인
 
   // useRouter(): 페이지 이동을 관리하는 hook 
   const router = useRouter();
