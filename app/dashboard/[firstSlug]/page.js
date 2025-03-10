@@ -52,6 +52,7 @@ export default function VideoDetail() {
   const [replyVideoUrl, setReplyVideoUrl] = useState(""); // 답글 비디오 URL
   const [replyEssay, setReplyEssay] = useState(""); // 답글 에세이 내용
   const [replies, setReplies] = useState([]); // 답글 목록
+  const [myReplies, setMyReplies] = useState([]); // 답글 목록
 
   // vercel 환경 변수로 저장해둔 youtube api key
   // 반드시 "NEXT_PUBLIC_~"가 붙어야 함 
@@ -158,6 +159,39 @@ export default function VideoDetail() {
       };
   
       fetchReplies();
+    }
+  }, [firstSlug, isOn]);
+
+  useEffect(() => {
+    if (isOn) {
+      const fetchMyReplies = async () => {
+        try {
+          const q = query(
+            repliesRef, 
+            where("isPosted", "==", false),
+            where("user", "==", userEmail)  // userEmail과 user 필드 값이 같은 것만 가져오기
+          );
+  
+          // ✅ 쿼리 실행
+          const querySnapshot = await getDocs(q);
+  
+          const repliesList = querySnapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+              id: doc.id,
+              ...data,
+              likes: data.likes,
+              recommend: data.recommend
+            };
+          });
+  
+          setMyReplies(repliesList);
+        } catch (error) {
+          console.error("🔥 답글을 가져오는 중 오류 발생: ", error);
+        }
+      };
+  
+      fetchMyReplies();
     }
   }, [firstSlug, isOn]);
   
@@ -642,10 +676,67 @@ export default function VideoDetail() {
             </div>
           )}
 
+          {/* 🔥 작성 중이던 리스트 표시 */}
+          {myReplies.length > 0 && (
+            <div className="mt-4">
+              <h3 className="text-lg font-semibold">작성 중인 댓글 목록</h3>
+              {myReplies.map((reply) => (
+                <Card key={reply.id} className="mt-3 w-full max-w-2xl">
+                  <Link key={reply.id} href={`/dashboard/${firstSlug}/${reply.id}`} passHref>
+                    <div className="relative w-full aspect-video">
+                      <iframe
+                        className="w-full h-full rounded-t-lg"
+                        src={`https://www.youtube.com/embed/${reply.videoId}`}
+                        frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      ></iframe>
+                    </div>
+                  </Link>
+                  <CardContent className="p-4">
+                    <Link key={reply.id} href={`/dashboard/${firstSlug}/${reply.id}`} passHref>
+                      <h3 className="text-lg font-bold mb-2">{reply.name}</h3>
+                      <div className="flex items-center justify-between w-full">
+                        <div className="flex items-center">
+                          <Image src={reply.channelProfile} alt="Channel Profile" width={40} height={40} className="rounded-full mr-3" />
+                          <span className="text-lg font-semibold">{reply.channel}</span>
+                        </div>
+                        <div className="flex items-center">
+                          <ThumbsUp className="w-5 h-5 text-gray-500 mr-1" />
+                          <span className="text-gray-600">{reply.likes}</span>
+                        </div>
+                      </div>
+                      <p className="text-sm text-gray-500 mt-2">{reply.views} views · {new Date(reply.publishedAt).toLocaleDateString()}</p>
+                    </Link>
+                    {/* 🔥 답글 좋아요 버튼 */}
+                    <div className="mt-4">
+                      <div className="flex items-center justify-between">
+                        { isOn && (
+                            <button
+                            className="flex items-center p-2 rounded-lg transition"
+                            onClick={() => handleReplyLike(reply.id)}
+                          >
+                            <Heart
+                              className="w-4 h-4 text-red-500 cursor-pointer"
+                              fill={reply.liked ? "currentColor" : "none"}
+                            />
+                            <span className="ml-2 text-lg font-semibold cursor-pointer">{reply.recommend}</span>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+
+
+
           {/* 🔥 기존 답글 리스트 표시 */}
           {replies.length > 0 && (
             <div className="mt-4">
-              <h3 className="text-lg font-semibold">답글 목록</h3>
+              <h3 className="text-lg font-semibold">전체 댓글 목록</h3>
               {replies.map((reply) => (
                 <Card key={reply.id} className="mt-3 w-full max-w-2xl">
                   <Link key={reply.id} href={`/dashboard/${firstSlug}/${reply.id}`} passHref>
