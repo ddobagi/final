@@ -166,6 +166,9 @@ export default function VideoDetail() {
     if (isOn) {
       const fetchMyReplies = async () => {
         try {
+
+          const repliesRef = collection(db, "gallery", firstSlug, "comment");
+          
           const q = query(
             repliesRef, 
             where("isPosted", "==", false),
