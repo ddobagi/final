@@ -329,7 +329,7 @@ const handleTogglePost = async () => {
               </div>
 
               {/* 🔥 Essay 입력 또는 표시 */}
-              {!isOn ? (
+              {true ? (
                 isEditing ? (
                   <textarea
                     className="w-full p-2 border rounded mt-2 font-nanum_pen"
