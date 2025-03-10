@@ -163,7 +163,7 @@ export default function VideoDetail() {
   }, [firstSlug, isOn]);
 
   useEffect(() => {
-    if (true) {
+    if (isOn) {
       const fetchMyReplies = async () => {
         try {
 
@@ -172,7 +172,6 @@ export default function VideoDetail() {
           const q = query(
             repliesRef, 
             where("isPosted", "==", false),
-            where("user", "==", userEmail)  // userEmail과 user 필드 값이 같은 것만 가져오기
           );
   
           // ✅ 쿼리 실행
