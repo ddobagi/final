@@ -69,6 +69,7 @@ export default function VideoDetail() {
         if (currentUser) {
             setUser(currentUser);
             setLoading(true);
+            setUserEmail(currentUser.email);
             console.log(firstSlug);
 
             try {
@@ -108,7 +109,6 @@ export default function VideoDetail() {
 
   // useEffect: 컴포넌트가 렌더링될 때 실행되는 react hook 
   useEffect(() => {
-    setUserEmail(auth.currentUser.email);
     // 이전 페이지의 url에 "/dashboard/likes"가 포함되면, 
     // previousPage 상태변수의 값을 "/dashboard/likes"로 설정 
     if (document.referrer.includes("/dashboard/likes")) {
@@ -167,6 +167,7 @@ export default function VideoDetail() {
         try {
 
           const repliesRef = collection(db, "gallery", firstSlug, "comment");
+          console.log(userEmail);
 
           const q = query(
             repliesRef, 
