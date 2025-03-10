@@ -166,7 +166,6 @@ export default function VideoDetail() {
         try {
 
           const repliesRef = collection(db, "gallery", firstSlug, "comment");
-          console.log(userEmail);
 
           const q = query(
             repliesRef, 
@@ -196,7 +195,7 @@ export default function VideoDetail() {
   
       fetchMyReplies();
     }
-  }, [firstSlug, isOn]);
+  }, [firstSlug, isOn, userEmail]);
   
   
 
