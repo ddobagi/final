@@ -9,9 +9,6 @@ import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 
-<Link href="/dashboard">대시보드로 이동</Link>
-
-
 // firebase 
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
