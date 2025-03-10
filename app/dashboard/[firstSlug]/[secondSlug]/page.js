@@ -23,7 +23,7 @@ import { ThumbsUp, ArrowLeft, Heart } from "lucide-react";
 export default function ReplyDetail() {
 
   // URL에서 firstSlug와 commentId 가져오기
-  const { firstSlug} = useParams(); 
+  const { firstSlug, secondSlug } = useParams("https://final-nine-ruddy.vercel.app/dashboard/Gi46b9ZAdZbQ65XZ46PI/ddddddddd"); 
 
   // useRouter(): 페이지 이동을 관리하는 hook 
   const router = useRouter();
@@ -50,7 +50,7 @@ export default function ReplyDetail() {
         setUser(currentUser);
         setUserEmail(currentUser.email);
         setLoading(true);
-        console.log(firstSlug);
+        console.log(firstSlug, secondSlug);
       } else {
         console.log("❌ 로그인되지 않음");
         router.push("/");
@@ -60,9 +60,9 @@ export default function ReplyDetail() {
     });
 
     return () => unsubscribe();
-  }, [firstSlug, router]);
+  }, [firstSlug, secondSlug, router]);
 
   return (
-    <p>{firstSlug}</p>
+    <p>{firstSlug} {secondSlug}</p>
   )
 }
