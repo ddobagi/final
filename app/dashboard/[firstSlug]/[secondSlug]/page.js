@@ -7,7 +7,6 @@ import { useEffect, useState } from "react";
 // next.js 
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
-import Link from "next/link";
 
 // firebase 
 import { onAuthStateChanged, signOut } from "firebase/auth";
@@ -46,17 +45,9 @@ export default function SecondSlugPage() {
   const [userEmail, setUserEmail] = useState("");
   const [previousPage, setPreviousPage] = useState("/dashboard");
 
-  // 🚨 답글 기능 🚨
-
-  const [replying, setReplying] = useState(false); // 답글 입력 UI 활성화 여부
-  const [replyVideoUrl, setReplyVideoUrl] = useState(""); // 답글 비디오 URL
-  const [replyEssay, setReplyEssay] = useState(""); // 답글 에세이 내용
-  const [replies, setReplies] = useState([]); // 답글 목록
-
   // vercel 환경 변수로 저장해둔 youtube api key
   // 반드시 "NEXT_PUBLIC_~"가 붙어야 함 
   const API_KEY = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY;
-  
 
   // useEffect: 컴포넌트가 렌더링될 때 실행되는 react hook 
   useEffect(() => {
@@ -221,44 +212,6 @@ export default function SecondSlugPage() {
     if (!email || typeof email !== "string") return "";
     return email.split("@")[0];
   }
-  
-  const handleReplyLike = async (commentId) => {
-    if (!auth.currentUser) return;
-  
-    // Firestore 경로 설정
-    const userId = auth.currentUser?.uid;
-    const replyRef = doc(db, "gallery", firstSlug, "comment", commentId);
-    const userLikeRef = doc(db, "gallery", firstSlug, "comment", commentId, "likes", userId);
-  
-    try {
-      const likeSnap = await getDoc(userLikeRef); // 현재 사용자가 좋아요를 눌렀는지 확인
-  
-      setReplies((prevReplies) =>
-        prevReplies.map((reply) =>
-          reply.id === commentId
-            ? {
-                ...reply,
-                liked: !likeSnap.exists(), // 좋아요 상태 변경
-                recommend: reply.recommend + (likeSnap.exists() ? -1 : 1), // recommend 업데이트
-              }
-            : reply
-        )
-      );
-  
-      if (likeSnap.exists()) {
-        // 🔥 이미 좋아요를 눌렀다면 취소
-        await updateDoc(replyRef, { recommend: increment(-1) }); // Firestore에서 recommend 1 감소
-        await deleteDoc(userLikeRef); // 현재 유저의 like 문서 삭제
-      } else {
-        // 🔥 좋아요 추가
-        await updateDoc(replyRef, { recommend: increment(1) }); // Firestore에서 recommend 1 증가
-        await setDoc(userLikeRef, { liked: true }); // 현재 유저의 like 문서 추가
-      }
-    } catch (error) {
-      console.error("🔥 답글 좋아요 업데이트 실패:", error);
-    }
-  };
-  
 
   if (loading) return <p className="text-center mt-10">로딩 중...</p>;
   if (error) return <p className="text-center mt-10 text-red-500">{error}</p>;
