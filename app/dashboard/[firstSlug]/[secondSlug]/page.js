@@ -65,3 +65,4 @@ export default function ReplyDetail() {
   return (
     <p>{firstSlug}, {commentId}</p>
   )
+}
