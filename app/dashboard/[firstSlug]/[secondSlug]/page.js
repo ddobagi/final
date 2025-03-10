@@ -43,6 +43,6 @@ export default function SecondSlugPage() {
   }, [firstSlug, secondSlug, router]);
 
   return (
-    <p>제발!</p>
+    <p>firstSlug: {firstSlug} // secondSlug: {SecondSlug}</p>
   )
 }
