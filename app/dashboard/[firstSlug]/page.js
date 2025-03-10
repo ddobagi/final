@@ -550,6 +550,14 @@ export default function VideoDetail() {
       return null;
     }
   };
+
+  const sortedReplies = [...replies].sort((a, b) => {
+      return Number(b.recommend) - Number(a.recommend); // isOn이 true이면 recommend를 기준으로 정렬, recommend가 많은 것(b)부터 정렬 
+  });
+
+  const sortedMyReplies = [...myReplies].sort((a, b) => {
+    return Number(b.createdAt) - Number(a.createdAt); // isOn이 true이면 recommend를 기준으로 정렬, recommend가 많은 것(b)부터 정렬 
+});
   
 
   if (loading) return <p className="text-center mt-10">로딩 중...</p>;
@@ -680,7 +688,7 @@ export default function VideoDetail() {
           )}
 
           {/* 🔥 작성 중이던 리스트 표시 */}
-          {myReplies.length > 0 && (
+          {sortedMyReplies.length > 0 && (
             <div className="mt-4">
               <h3 className="text-lg font-semibold">작성 중인 댓글 목록</h3>
               {myReplies.map((reply) => (
@@ -720,7 +728,7 @@ export default function VideoDetail() {
 
 
           {/* 🔥 기존 답글 리스트 표시 */}
-          {replies.length > 0 && (
+          {myReplies.length > 0 && (
             <div className="mt-4">
               <h3 className="text-lg font-semibold">전체 댓글 목록</h3>
               {replies.map((reply) => (
