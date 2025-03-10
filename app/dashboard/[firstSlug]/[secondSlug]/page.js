@@ -65,7 +65,7 @@ export default function SecondSlugPage() {
 
             try {
                 // 현재 페이지의 slug 값에 알맞게 fetchVideoData 함수 실행 
-                await fetchVideoData(firstSlug);
+                await fetchVideoData(firstSlug, secondSlug);
             } catch (error) {
                 console.error("사용자 Mode 데이터를 가져오는 중 오류 발생:", error);
                 await fetchVideoData(firstSlug, false);
@@ -130,7 +130,6 @@ export default function SecondSlugPage() {
         const videoData = docSnap.data();
         setLikes(videoData.recommend || 0);
 
-        // Promise.all: 두 개의 firestore 요청을 한 번에 처리. api 호출 최적화 
         // userLikeSnap과 userDocSnap에 private 모드와 public 모드의 db 경로를 각각 저장 
         const userLikeSnap = await getDoc(doc(db, "gallery", firstSlug, "comment", secondSlug, "likes", userId));
 
