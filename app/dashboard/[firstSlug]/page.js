@@ -68,7 +68,6 @@ export default function VideoDetail() {
         // 현재 사용자와 현재 사용자의 이메일을, 각각 user와 userEmail로 설정 
         if (currentUser) {
             setUser(currentUser);
-            setLoading(true);
             setUserEmail(currentUser.email);
             console.log(firstSlug);
 
@@ -91,7 +90,6 @@ export default function VideoDetail() {
         } else {
             console.log("❌ 로그인되지 않음");
             router.push("/");
-            setLoading(false);
             return;
         }
     });
