@@ -7,6 +7,7 @@ import { useState, useEffect, useRef } from "react";
 // next.js 
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 
 // firebase 
 import { auth, db } from "@/lib/firebase";
@@ -314,7 +315,7 @@ export default function Dashboard() {
           </button>
         ) : (
           <div className="w-10 h-10 rounded-full overflow-hidden bg-black flex items-center justify-center">
-            <img src="/deep_logo.png" alt="Logo" className="w-8 h-8 object-contain" />
+            <Image src="/deep_logo.png" alt="Logo" width={8} height={8} className="object-contain" />
           </div>
         )}
 
@@ -402,7 +403,8 @@ export default function Dashboard() {
                 <Link key={video.id} href={`dashboard/${video.id}`} passHref>
                   <div className="flex items-center space-x-3">
                     {/* 채널 프로필 이미지 */}
-                    <img src={video.channelProfile} alt={video.channel} className="w-10 h-10 rounded-full object-cover" />
+                    <Image src={video.channelProfile} alt={video.channel} width={10} height={10} className="rounded-full object-cover" />
+                    
 
                     {/* 영상 제목 및 채널 정보 */}
                     <div className="flex flex-col flex-1">
