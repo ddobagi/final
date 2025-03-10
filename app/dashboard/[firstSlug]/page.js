@@ -656,7 +656,6 @@ export default function VideoDetail() {
                     {/* 🔥 답글 좋아요 버튼 */}
                     <div className="mt-4">
                       <div className="flex items-center justify-between">
-                        <h2 className="text-lg font-semibold font-nanum_pen">Essay</h2>
                         { isOn && (
                             <button
                             className="flex items-center p-2 rounded-lg transition"

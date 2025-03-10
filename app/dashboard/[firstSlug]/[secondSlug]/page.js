@@ -114,6 +114,7 @@ export default function SecondSlugPage() {
           where("isPosted", "==", true),
           where("__name__", "==", secondSlug) // 특정 문서만 가져오기 위해 ID 필터 추가
         );
+        console.log("1번 오류");
 
         const querySnapshot = await getDocs(q);
 
@@ -126,11 +127,13 @@ export default function SecondSlugPage() {
             setEssay(videoData.essay || "");
             setIsPosted(videoData.isPosted || false);
             setLikes(videoData.recommend || 0);
+            console.log("2번 오류");
             console.log(videoData);
 
             // userLikeSnap과 userDocSnap에 private 모드와 public 모드의 db 경로를 각각 저장 
             const userId = auth.currentUser.uid;
             const userLikeSnap = await getDoc(doc(db, "gallery", firstSlug, "comment", secondSlug, "likes", userId));
+            console.log("3번 오류");
 
             // 만약 현재 페이지의 영상에 대한, 현재 user의 likes 필드가 존재한다면 liked 상태 변수를 true로 설정 
             setLiked(userLikeSnap.exists());
@@ -352,7 +355,7 @@ const handleTogglePost = async () => {
               )}
 
               {/* 🔥 isOn이 false일 때만 버튼 표시 */}
-              {!isOn && (
+              { true && (
                 <div className="flex mt-2 space-x-2 font-pretendard justify-end">
                   {isEditing ? (
                     <Button onClick={handleSaveEssay}>저장</Button>
