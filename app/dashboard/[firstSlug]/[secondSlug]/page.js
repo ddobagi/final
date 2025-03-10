@@ -137,7 +137,7 @@ export default function SecondSlugPage() {
         // 만약 현재 페이지의 영상에 대한, 현재 user의 likes 필드가 존재한다면 liked 상태 변수를 true로 설정 
         setLiked(userLikeSnap.exists());
     } catch (error) {
-        console.error("Firestore에서 비디오 데이터 가져오는 중 오류 발생: ", error);
+        console.error("fetchVideoDeta 함수 에러: ", error);
         setError(error.message);
     } finally {
         // 필요한 데이터를 모두 가져온 후 로딩 해제 
@@ -170,7 +170,7 @@ export default function SecondSlugPage() {
       setIsPosted(false);
       setIsEditing(false);
     } catch (error) {
-      console.error("에세이 저장 오류: ", error);
+      console.error("handleSaveEssay 함수 에러: ", error);
     }
   };
   
@@ -203,7 +203,7 @@ export default function SecondSlugPage() {
         setLikes((prevLikes) => prevLikes + 1); // likes 상태 변수의 값도 1 증가 
       }
     } catch (error) {
-      console.error("좋아요 업데이트 실패:", error);
+      console.error("handleLike 함수 에러:", error);
     }
   };
 
