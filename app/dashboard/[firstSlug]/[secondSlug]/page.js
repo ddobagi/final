@@ -17,7 +17,6 @@ export default function SecondSlugPage() {
 
   // useRouter(): 페이지 이동을 관리하는 hook 
   const router = useRouter();
-  console.log(router.pathname)
 
   // useState() : react에서 상태를 관리하는 hook 
   const [user, setUser] = useState(null);
