@@ -134,7 +134,13 @@ export default function VideoDetail() {
       const fetchReplies = async () => {
         try {
           const repliesRef = collection(db, "gallery", firstSlug, "comment");
-          const querySnapshot = await getDocs(repliesRef);
+          
+          // ✅ Firestore 쿼리 적용 (isPosted가 true인 것만 가져오기)
+          const q = query(repliesRef, where("isPosted", "==", true));
+  
+          // ✅ 쿼리 실행
+          const querySnapshot = await getDocs(q);
+  
           const repliesList = querySnapshot.docs.map(doc => {
             const data = doc.data();
             return {
@@ -143,7 +149,8 @@ export default function VideoDetail() {
               likes: data.likes,
               recommend: data.recommend
             };
-        });
+          });
+  
           setReplies(repliesList);
         } catch (error) {
           console.error("🔥 답글을 가져오는 중 오류 발생: ", error);
@@ -153,6 +160,7 @@ export default function VideoDetail() {
       fetchReplies();
     }
   }, [firstSlug, isOn]);
+  
   
 
   // 동적 라우팅 페이지에 표시할 video 데이터들을 fetch 해옴 
