@@ -6,6 +6,11 @@ import { useEffect, useState } from "react";
 
 // next.js 
 import { useParams, useRouter } from "next/navigation";
+import Image from "next/image";
+import Link from "next/link";
+
+<Link href="/dashboard">대시보드로 이동</Link>
+
 
 // firebase 
 import { onAuthStateChanged, signOut } from "firebase/auth";
@@ -524,7 +529,7 @@ export default function VideoDetail() {
             <h3 className="text-lg font-bold mb-2">{video.name}</h3>
             <div className="flex items-center justify-between w-full">
               <div className="flex items-center">
-                <img src={video.channelProfile} alt="Channel Profile" className="w-10 h-10 rounded-full mr-3" />
+                <Image src={video.channelProfile} alt="Channel Profile" width={40} height={40} className="rounded-full mr-3" />
                 <span className="text-lg font-semibold">{video.channel}</span>
               </div>
               <div className="flex items-center">
@@ -639,7 +644,7 @@ export default function VideoDetail() {
                       <h3 className="text-lg font-bold mb-2">{reply.name}</h3>
                       <div className="flex items-center justify-between w-full">
                         <div className="flex items-center">
-                          <img src={reply.channelProfile} alt="Channel Profile" className="w-10 h-10 rounded-full mr-3" />
+                          <Image src={reply.channelProfile} alt="Channel Profile" width={40} height={40} className="rounded-full mr-3" />
                           <span className="text-lg font-semibold">{reply.channel}</span>
                         </div>
                         <div className="flex items-center">
