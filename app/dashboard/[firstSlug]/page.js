@@ -69,6 +69,7 @@ export default function VideoDetail() {
         if (currentUser) {
             setUser(currentUser);
             setUserEmail(currentUser.email);
+            console.log(userEmail);
             setLoading(true);
             console.log(firstSlug);
 
@@ -168,12 +169,11 @@ export default function VideoDetail() {
         try {
 
           const repliesRef = collection(db, "gallery", firstSlug, "comment");
-          const currentUserEmail = auth.currentUser.email;
 
           const q = query(
             repliesRef, 
             where("isPosted", "==", false),
-            where("user", "==", currentUserEmail)
+            where("user", "==", userEmail)
           );
   
           // ✅ 쿼리 실행
