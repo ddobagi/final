@@ -168,7 +168,7 @@ export default function VideoDetail() {
         try {
 
           const repliesRef = collection(db, "gallery", firstSlug, "comment");
-          
+
           const q = query(
             repliesRef, 
             where("isPosted", "==", false),
@@ -189,6 +189,7 @@ export default function VideoDetail() {
           });
   
           setMyReplies(repliesList);
+          console.log(myReplies);
         } catch (error) {
           console.error("🔥 답글을 가져오는 중 오류 발생: ", error);
         }
