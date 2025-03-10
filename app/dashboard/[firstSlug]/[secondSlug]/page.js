@@ -242,10 +242,6 @@ const handleTogglePost = async () => {
 
           if (querySnapshot.empty) {
               console.warn("⚠️ gallery에 해당 비디오가 없음");
-          } else {        
-              const batch = writeBatch(db); // 한 번에 firestore 작업을 처리하기 위한 batch생성 
-              querySnapshot.forEach((doc) => batch.delete(doc.ref)); // 반복문을 돌면서 querySnapshot의 여러 문서에 대한 삭제 예약
-              await batch.commit(); // 한 번에 삭제 처리 
           }
 
           // 현재 사용자가 저장한, 현재 페이지의 slug를 videoId로 가지는 video 문서의
