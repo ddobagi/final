@@ -111,6 +111,7 @@ export default function SecondSlugPage() {
         // db 경로에서 문서를 불러옴 
         const q = query(
           collection(db, "gallery", firstSlug, "comment"),
+          where("isPosted", "==", true),
           where("__name__", "==", secondSlug) // 특정 문서만 가져오기 위해 ID 필터 추가
         );
         console.log("1번 오류");
@@ -132,7 +133,6 @@ export default function SecondSlugPage() {
             // userLikeSnap과 userDocSnap에 private 모드와 public 모드의 db 경로를 각각 저장 
             const userId = auth.currentUser.uid;
             const userLikeSnap = await getDoc(doc(db, "gallery", firstSlug, "comment", secondSlug, "likes", userId));
-            console.log("3번 오류");
 
             // 만약 현재 페이지의 영상에 대한, 현재 user의 likes 필드가 존재한다면 liked 상태 변수를 true로 설정 
             setLiked(userLikeSnap.exists());
