@@ -68,8 +68,6 @@ export default function VideoDetail() {
         // 현재 사용자와 현재 사용자의 이메일을, 각각 user와 userEmail로 설정 
         if (currentUser) {
             setUser(currentUser);
-            setUserEmail(currentUser.email);
-            console.log(userEmail);
             setLoading(true);
             console.log(firstSlug);
 
@@ -93,7 +91,6 @@ export default function VideoDetail() {
             console.log("❌ 로그인되지 않음");
             router.push("/");
             setLoading(false);
-            setUserEmail("");
             return;
         }
     });
@@ -111,12 +108,13 @@ export default function VideoDetail() {
 
   // useEffect: 컴포넌트가 렌더링될 때 실행되는 react hook 
   useEffect(() => {
-
+    setUserEmail(auth.currentUser.email);
     // 이전 페이지의 url에 "/dashboard/likes"가 포함되면, 
     // previousPage 상태변수의 값을 "/dashboard/likes"로 설정 
     if (document.referrer.includes("/dashboard/likes")) {
       setPreviousPage("/dashboard/likes");
     }
+
   // 의존성 배열이 비어있음 -> 컴포넌트가 최초 렌더링(마운트) 될 때 한 번만 실행되고, 이후 실행되지 않음
   }, []);
 
