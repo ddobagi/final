@@ -20,7 +20,7 @@ import { Button } from "@/components/ui/button";
 import { ThumbsUp, ArrowLeft, Heart } from "lucide-react";
 
 // export default: 다른 곳에서 import 할 수 있는 함수형 컴포넌트를 정의 
-export default function secondSlugPage() {
+export default function SecondSlugPage() {
 
   // URL에서 firstSlug와 commentId 가져오기
   const { firstSlug, secondSlug } = useParams(); 
