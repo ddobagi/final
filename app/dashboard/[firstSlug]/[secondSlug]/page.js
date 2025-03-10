@@ -109,31 +109,34 @@ export default function SecondSlugPage() {
         setLoading(true);
 
         // db 경로에서 문서를 불러옴 
-        const userId = auth.currentUser?.uid;
-        let docRef = doc(db, "gallery", firstSlug, "comment", secondSlug);
-        const docSnap = await getDoc(docRef);
+        const q = query(
+          collection(db, "gallery", firstSlug, "comment"),
+          where("isPosted", "==", true),
+          where("__name__", "==", secondSlug) // 특정 문서만 가져오기 위해 ID 필터 추가
+        );
+
+        const querySnapshot = await getDocs(q);
 
         // 불러온 문서에서 전체 data와 essay, isPosted 데이터를 가져와
         // video, essay, isPosted 상태 변수에 저장 
-        if (docSnap.exists()) {
+        if (!querySnapshot.empty) {
+            const docSnap = querySnapshot.docs[0];
             const videoData = docSnap.data();
             setVideo(videoData);
             setEssay(videoData.essay || "");
             setIsPosted(videoData.isPosted || false);
-            console.log(video);
+            setLikes(videoData.recommend || 0);
+            console.log(videoData);
+
+            // userLikeSnap과 userDocSnap에 private 모드와 public 모드의 db 경로를 각각 저장 
+            const userId = auth.currentUser.uid;
+            const userLikeSnap = await getDoc(doc(db, "gallery", firstSlug, "comment", secondSlug, "likes", userId));
+
+            // 만약 현재 페이지의 영상에 대한, 현재 user의 likes 필드가 존재한다면 liked 상태 변수를 true로 설정 
+            setLiked(userLikeSnap.exists());
         } else {
             throw new Error("해당 비디오를 찾을 수 없습니다.");
         }
-
-        // 불러온 문서에서 recommend 데이터도 가져와 likes 상태 변수에 저장 
-        const videoData = docSnap.data();
-        setLikes(videoData.recommend || 0);
-
-        // userLikeSnap과 userDocSnap에 private 모드와 public 모드의 db 경로를 각각 저장 
-        const userLikeSnap = await getDoc(doc(db, "gallery", firstSlug, "comment", secondSlug, "likes", userId));
-
-        // 만약 현재 페이지의 영상에 대한, 현재 user의 likes 필드가 존재한다면 liked 상태 변수를 true로 설정 
-        setLiked(userLikeSnap.exists());
     } catch (error) {
         console.error("fetchVideoDeta 함수 에러: ", error);
         setError(error.message);
@@ -210,6 +213,64 @@ export default function SecondSlugPage() {
     if (!email || typeof email !== "string") return "";
     return email.split("@")[0];
   }
+
+
+
+// video 게시 & 게시 취소 관리 
+const handleTogglePost = async () => {
+
+  if (!video) return;
+
+  try {
+      const userId = auth.currentUser?.uid;
+      if (!video || !auth.currentUser) return;
+
+      // 현재 사용자가 저장한, 현재 페이지의 slug를 videoId로 가지는 video 정보 가져옴 
+      const userDocRef = doc(db, "gallery", firstSlug, "comment", secondSlug); // db 경로 설정 
+      const userDocSnap = await getDoc(userDocRef); // 해당 경로의 문서 불러옴 
+
+      if (!userDocSnap.exists()) {
+          console.error("❌ 사용자의 해당 비디오 데이터가 Firestore에 존재하지 않음");
+          return;
+      }
+
+      // 이미 게시된 video라면 
+      if (isPosted) {
+          // firestore db의 gallery 컬렉션에서, video 필드의 값이 video.video와 일치하는 것(즉 동일한 url을 가지는 것)만 query하도록
+          const q = query(collection(db, "gallery", firstSlug, "comment"), where("video", "==", video.video)); // db 경로 설정
+          const querySnapshot = await getDocs(q); // 해당 경로의 문서 가져옴 
+
+          if (querySnapshot.empty) {
+              console.warn("⚠️ gallery에 해당 비디오가 없음");
+          } else {        
+              const batch = writeBatch(db); // 한 번에 firestore 작업을 처리하기 위한 batch생성 
+              querySnapshot.forEach((doc) => batch.delete(doc.ref)); // 반복문을 돌면서 querySnapshot의 여러 문서에 대한 삭제 예약
+              await batch.commit(); // 한 번에 삭제 처리 
+          }
+
+          // 현재 사용자가 저장한, 현재 페이지의 slug를 videoId로 가지는 video 문서의
+          // isPosted 필드 값을 false로 업데이트, isPosted 상태 변수 값도 false로 설정 
+          await updateDoc(userDocRef, { isPosted: false });
+          setIsPosted(false);
+        
+      // 아직 게시되지 않은 video라면 
+      } else {
+          // 현재 사용자가 저장한, 현재 페이지의 slug를 videoId로 가지는 video 문서의 isPosted 값도 true로 변경, isPosted 상태 변수 값도 true로 변경 
+          await updateDoc(userDocRef, { isPosted: true });
+          setIsPosted(true);
+      }
+  } catch (error) {
+      console.error("🔥 게시/게시 취소 중 오류 발생:", error);
+  }
+};
+
+
+
+
+
+
+
+
 
   if (loading) return <p className="text-center mt-10">로딩 중...</p>;
   if (error) return <p className="text-center mt-10 text-red-500">{error}</p>;
