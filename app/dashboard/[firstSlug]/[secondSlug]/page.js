@@ -64,6 +64,16 @@ export default function SecondSlugPage() {
             setIsOn(true);
 
             try {
+                // 현재 user 정보를 가져옴 
+                const userDocRef = doc(db, "gallery", firstSlug, "comment", secondSlug); // db 경로 정의
+                const userDocSnap = await getDoc(userDocRef);// 해당 db 경로의 문서 불러옴 
+
+                // 해당 문서 Mode 필드의 값이 public이면 mode = true, 아니면 mode = false
+                // isOn 값도 mode 값에 따라 변경 
+                const post = userDocSnap.exists() && userDocSnap.data().isPosted === "true";  
+                setIsPosted(post);
+
+
                 // 현재 페이지의 slug 값에 알맞게 fetchVideoData 함수 실행 
                 await fetchVideoData(firstSlug, secondSlug);
             } catch (error) {
@@ -145,6 +155,11 @@ export default function SecondSlugPage() {
         setLoading(false);
     }
   };
+
+
+
+
+  
 
   // 에세이 저장 
   const handleSaveEssay = async () => {
@@ -344,7 +359,7 @@ const handleTogglePost = async () => {
               )}
 
               {/* 🔥 isOn이 false일 때만 버튼 표시 */}
-              { true && (
+              { (userEmail == video.user) && (
                 <div className="flex mt-2 space-x-2 font-pretendard justify-end">
                   {isEditing ? (
                     <Button onClick={handleSaveEssay}>저장</Button>
