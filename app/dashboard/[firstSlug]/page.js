@@ -177,7 +177,7 @@ export default function VideoDetail() {
             setVideo(videoData);
             setEssay(videoData.essay || "");
             setIsPosted(videoData.isPosted || false);
-            console.log(video, video.id);
+            console.log(video);
         } else {
             throw new Error(`해당 비디오를 찾을 수 없습니다. (isOn: ${mode})`);
         }
