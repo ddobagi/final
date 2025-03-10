@@ -177,6 +177,7 @@ export default function VideoDetail() {
             setVideo(videoData);
             setEssay(videoData.essay || "");
             setIsPosted(videoData.isPosted || false);
+            console.log(video, video.id);
         } else {
             throw new Error(`해당 비디오를 찾을 수 없습니다. (isOn: ${mode})`);
         }
@@ -626,7 +627,7 @@ export default function VideoDetail() {
             <div className="mt-4">
               <h3 className="text-lg font-semibold">답글 목록</h3>
               {replies.map((reply) => (
-                <Link key={reply.id} href={`/dashboard/${video.title}/${reply.id}`} passHref>
+                <Link key={reply.id} href={`/dashboard/${video.id}/${reply.id}`} passHref>
                   <Card key={reply.id} className="mt-3 w-full max-w-2xl">
                     <div className="relative w-full aspect-video">
                       <iframe
