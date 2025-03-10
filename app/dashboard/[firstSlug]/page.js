@@ -691,7 +691,7 @@ export default function VideoDetail() {
           {sortedMyReplies.length > 0 && (
             <div className="mt-4">
               <h3 className="text-lg font-semibold">작성 중인 댓글 목록</h3>
-              {myReplies.map((reply) => (
+              {sortedMyReplies.map((reply) => (
                 <Card key={reply.id} className="mt-3 w-full max-w-2xl">
                   <Link key={reply.id} href={`/dashboard/${firstSlug}/${reply.id}`} passHref>
                     <div className="relative w-full aspect-video">
@@ -728,10 +728,10 @@ export default function VideoDetail() {
 
 
           {/* 🔥 기존 답글 리스트 표시 */}
-          {myReplies.length > 0 && (
+          {sortedReplies.length > 0 && (
             <div className="mt-4">
               <h3 className="text-lg font-semibold">전체 댓글 목록</h3>
-              {replies.map((reply) => (
+              {sortedReplies.map((reply) => (
                 <Card key={reply.id} className="mt-3 w-full max-w-2xl">
                   <Link key={reply.id} href={`/dashboard/${firstSlug}/${reply.id}`} passHref>
                     <div className="relative w-full aspect-video">
