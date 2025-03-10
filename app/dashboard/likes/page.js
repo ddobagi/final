@@ -7,6 +7,7 @@ import { useState, useEffect } from "react";
 // next.js 
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 
 // firebase 
 import { auth, db } from "@/lib/firebase";
@@ -169,7 +170,7 @@ export default function LikesDashboard() {
             <CardContent className="p-4">
               <Link href={`/dashboard/${video.id}`} passHref>
                 <div className="flex items-center space-x-3">
-                  <img src={video.channelProfile} alt={video.channel} className="w-10 h-10 rounded-full object-cover" />
+                  <Image src={video.channelProfile} alt={video.channel} width={10} height={10} className="rounded-full object-cover" />
                   <div className="flex flex-col flex-1">
                     <h3 className="text-lg font-bold mb-2">{video.name}</h3>
                     <p className="text-sm text-gray-500">{video.channel} · {video.views} views · {new Date(video.publishedAt).toLocaleDateString()}</p>
