@@ -298,16 +298,17 @@ export default function VideoDetail() {
       // / 현재 사용자가 저장한, 현재 페이지의 slug를 videoId로 가지는 video 문서의 essay 필드 업데이트 
       const userId = auth.currentUser?.uid;
       const docRef = doc(db, "gallery", firstSlug); // db 경로 설정 
-      await updateDoc(docRef, { essay }); // essay 필드 업데이트 
 
-      // 수정 시, gallery 컬렉션에서 해당 영상은 일단 삭제 (수정 후 다시 게시)
-      // firestore db의 gallery 컬렉션에서, video 필드의 값이 video.video와 일치하는 것(즉 동일한 url을 가지는 것)만 query하도록
-      const q = query(collection(db, "gallery"), where("video", "==", video.video)); // db 경로 설정 
-      const querySnapshot = await getDocs(q); // 해당 경로의 문서 가져옴 
+      const docSnap = await getDoc(docRef);
+      if (!docSnap.exists()) {
+          console.error("❌ 해당 문서가 Firestore에 존재하지 않습니다.");
+          return;
+      }
 
-      const batch = writeBatch(db); // 한 번에 firestore 작업을 처리하기 위한 batch생성 
-      querySnapshot.forEach((doc) => batch.delete(doc.ref)); // 반복문을 돌면서 querySnapshot의 여러 문서에 대한 삭제 예약
-      await batch.commit(); // 한 번에 삭제 처리 
+      await updateDoc(docRef, {
+        essay: essay,
+        isPosted: false
+       }); // essay 필드 업데이트 
 
       // isPosted 상태 변수는 false로, isEditing 상태 변수도 false로 변경 
       setIsPosted(false);
