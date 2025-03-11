@@ -32,7 +32,7 @@ export default function Dashboard() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [videos, setVideos] = useState([]);
-  const [newVideo, setNewVideo] = useState({ name: "", video: "", thumbnail: "", channel: "", views: "", likes: "", publishedAt: "", channelProfile: "" });
+  const [newVideo, setNewVideo] = useState({ isPosted: false, name: "", video: "", thumbnail: "", channel: "", views: "", likes: "", publishedAt: "", createdAt: "", channelProfile: "" });
   const [search, setSearch] = useState("");
   const [fabOpen, setFabOpen] = useState(false);
   const [isOn, setIsOn] = useState(false);
@@ -245,10 +245,11 @@ export default function Dashboard() {
       // 설정한 db 경로로 video 정보 저장. 이때 youtube api로 불러온 video 정보뿐 아니라 recommend 필드도 추가 
       await addDoc(collectionPath, {
         ...videoDetails,
+        isPosted: false,
       });
 
       // newVideo는 다시 초기화해두기 (새로운 url 입력 받을 때까지)
-      setNewVideo({ name: "", video: "", thumbnail: "", channel: "", views: "", likes: "", publishedAt: "", channelProfile: "", createdAt: serverTimestamp(), recommend: 0 });
+      setNewVideo({ isPosted: false, name: "", video: "", thumbnail: "", channel: "", views: "", likes: "", publishedAt: "", channelProfile: "", createdAt: serverTimestamp(), recommend: 0 });
       setFabOpen(false);
     } catch (error) {
       console.error("Firestore에 비디오 추가 중 오류 발생: ", error);
