@@ -245,6 +245,7 @@ export default function Dashboard() {
       await addDoc(collectionPath, {
         ...videoDetails,
         userId: userId,
+        isPosted: false,
       });
 
       // newVideo는 다시 초기화해두기 (새로운 url 입력 받을 때까지)
