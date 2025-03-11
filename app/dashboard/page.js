@@ -12,7 +12,7 @@ import Image from "next/image";
 // firebase 
 import { auth, db } from "@/lib/firebase";
 import { onAuthStateChanged, signOut } from "firebase/auth";
-import { query, orderBy, collection, onSnapshot, addDoc, doc, getDoc, setDoc, serverTimestamp, writeBatch, where, getDocs } from "firebase/firestore";
+import { query, collection, onSnapshot, addDoc, doc, getDoc, setDoc, serverTimestamp, writeBatch, where, getDocs } from "firebase/firestore";
 
 // shadcn
 import { Card, CardContent } from "@/components/ui/card";
@@ -114,7 +114,6 @@ export default function Dashboard() {
         q = query(
             collection(db, "gallery"), 
             where("isPosted", "==", true), 
-            orderBy("recommend", "desc")
         );
     } else {
         // 🔥 isOn이 false → currentUser.uid와 gallery/{firstSlug} 문서의 userId 값이 일치하고, isPosted 필드가 false인 video만 가져오기
@@ -122,7 +121,6 @@ export default function Dashboard() {
             collection(db, "gallery"), 
             where("userId", "==", userId),
             where("isPosted", "==", false),
-            orderBy("createdAt", "desc")
         );
     }
 
