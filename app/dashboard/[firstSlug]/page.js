@@ -210,7 +210,7 @@ export default function VideoDetail() {
 
         // mode 값에 따라 상이한 db 경로에서 문서를 불러옴 
         const userId = auth.currentUser?.uid;
-        let docRef = mode ? doc(db, "gallery", firstSlug) : doc(db, "users", userId, "videos", firstSlug);
+        let docRef = doc(db, "gallery", firstSlug);
         const docSnap = await getDoc(docRef);
 
         // 불러온 문서에서 전체 data와 essay, isPosted 데이터를 가져와
@@ -266,10 +266,10 @@ export default function VideoDetail() {
 
     try {
         const userId = auth.currentUser?.uid;
-        if (!video || !auth.currentUser) return;
+        if (!video || !userId) return;
 
         // 현재 사용자가 저장한, 현재 페이지의 slug를 videoId로 가지는 video 정보 가져옴 
-        const userDocRef = doc(db, "users", userId, "videos", firstSlug); // db 경로 설정 
+        const userDocRef = doc(db, "gallery", firstSlug); // db 경로 설정 
         const userDocSnap = await getDoc(userDocRef); // 해당 경로의 문서 불러옴 
 
         if (!userDocSnap.exists()) {
@@ -277,54 +277,12 @@ export default function VideoDetail() {
             return;
         }
 
-        // 이미 게시된 video라면 
-        if (isPosted) {
-            // firestore db의 gallery 컬렉션에서, video 필드의 값이 video.video와 일치하는 것(즉 동일한 url을 가지는 것)만 query하도록
-            const q = query(collection(db, "gallery"), where("video", "==", video.video)); // db 경로 설정
-            const querySnapshot = await getDocs(q); // 해당 경로의 문서 가져옴 
+        const currentIsPosted = userDocSnap.data().isPosted || false; 
 
-            if (querySnapshot.empty) {
-                console.warn("⚠️ gallery에 해당 비디오가 없음");
-            } else {        
-                const batch = writeBatch(db); // 한 번에 firestore 작업을 처리하기 위한 batch생성 
-                querySnapshot.forEach((doc) => batch.delete(doc.ref)); // 반복문을 돌면서 querySnapshot의 여러 문서에 대한 삭제 예약
-                await batch.commit(); // 한 번에 삭제 처리 
-            }
+        // Firestore 트랜잭션을 사용하여 isPosted 상태를 반전시킴
+        await updateDoc(userDocRef, { isPosted: !currentIsPosted });
+        setIsPosted(!currentIsPosted);
 
-            // 현재 사용자가 저장한, 현재 페이지의 slug를 videoId로 가지는 video 문서의
-            // isPosted 필드 값을 false로 업데이트, isPosted 상태 변수 값도 false로 설정 
-            await updateDoc(userDocRef, { isPosted: false });
-            setIsPosted(false);
-          
-        // 아직 게시되지 않은 video라면 
-        } else {
-            
-            // 현재 사용자가 저장한, 현재 페이지의 slug를 videoId로 가지는 video 문서의 essay 필드의 값 불러옴  
-            const updatedUserDocSnap = await getDoc(userDocRef); // 앞서 설정한 userDocRef 경로로 문서 가져옴 
-            const latestEssay = updatedUserDocSnap.data().essay || "작성된 내용이 없습니다."; // latestEssay 변수에 저장 
-
-            // 현재 사용자가 저장한, 현재 페이지의 slug를 videoId로 가지는 video 문서의 각종 데이터를
-            // gallery db에 추가
-            // essay와 createdAt, recommend 필드도 포함됨 
-            await addDoc(collection(db, "gallery"), {
-                name: video.name || "알 수 없음",
-                video: video.video || "",
-                thumbnail: video.thumbnail || "",
-                channel: video.channel || "알 수 없음",
-                views: video.views || 0,
-                likes: video.likes || 0,
-                publishedAt: video.publishedAt || serverTimestamp(),
-                channelProfile: video.channelProfile || "",
-                post: true, // 새로운 문서에 post 필드 추가
-                essay: latestEssay, // 🔥 최신 essay 값 저장
-                createdAt: video.createdAt, // 문서 생성 시간 추가
-                recommend: video.recommend || 0,
-            });
-
-            // 현재 사용자가 저장한, 현재 페이지의 slug를 videoId로 가지는 video 문서의 isPosted 값도 true로 변경, isPosted 상태 변수 값도 true로 변경 
-            await updateDoc(userDocRef, { isPosted: true });
-            setIsPosted(true);
-        }
     } catch (error) {
         console.error("🔥 게시/게시 취소 중 오류 발생:", error);
     }
@@ -339,7 +297,7 @@ export default function VideoDetail() {
 
       // / 현재 사용자가 저장한, 현재 페이지의 slug를 videoId로 가지는 video 문서의 essay 필드 업데이트 
       const userId = auth.currentUser?.uid;
-      const docRef = doc(db, "users", userId, "videos", firstSlug); // db 경로 설정 
+      const docRef = doc(db, "gallery", firstSlug); // db 경로 설정 
       await updateDoc(docRef, { essay }); // essay 필드 업데이트 
 
       // 수정 시, gallery 컬렉션에서 해당 영상은 일단 삭제 (수정 후 다시 게시)
