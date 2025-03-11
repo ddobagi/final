@@ -108,15 +108,14 @@ export default function Dashboard() {
     const userId = auth.currentUser?.uid;
 
     // isOn 값에 따라 데이터를 불러올 db 경로를 설정 
-    const collectionPath = isOn 
-    ? collection(db, "gallery")  // isOn: true -> gallery 컬렉션 사용
-    : collection(db, "users", userId, "videos");  // isOn: false -> users/videos 컬렉션 사용
+    const collectionPath = collection(db, "users", userId, "videos");  // isOn: false -> users/videos 컬렉션 사용
 
     // isOn 값에 따라 상이한 경로에서 데이터를 불러온 후,
     // isOn 값에 따라 상이한 정렬 기준으로 데이터 정렬 
-    const q = isOn
-    ? query(collectionPath, orderBy("recommend", "desc"))
-    : query(collectionPath, orderBy("createdAt", "desc"))
+    const q = query(
+      collectionPath, 
+      where("isPosted", "==", isOn),
+    );
 
     // onSnapshot: firestore 데이터를 실시간으로 감지하는 이벤트 리스너 
     // snapshot: firestore에서 가져온 쿼리 전체 결과
@@ -435,15 +434,6 @@ export default function Dashboard() {
 
                       userQuerySnapshot.forEach((doc) => {
                         batch.delete(doc.ref); // 🔥 users/{user.uid}/videos 문서 삭제
-                      });
-
-                      // gallery에서 video.video와 일치하는 문서 찾기
-                      const galleryRef = collection(db, "gallery");
-                      const galleryQuery = query(galleryRef, where("video", "==", video.video));
-                      const galleryQuerySnapshot = await getDocs(galleryQuery);
-
-                      galleryQuerySnapshot.forEach((doc) => {
-                        batch.delete(doc.ref); // 🔥 gallery 문서 삭제
                       });
 
                       // 🔥 모든 삭제 작업 실행
