@@ -32,7 +32,7 @@ export default function Dashboard() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [videos, setVideos] = useState([]);
-  const [newVideo, setNewVideo] = useState({ isPosted: false, name: "", video: "", thumbnail: "", channel: "", views: "", likes: "", publishedAt: "", createdAt: "", channelProfile: "" });
+  const [newVideo, setNewVideo] = useState({ name: "", video: "", thumbnail: "", channel: "", views: "", likes: "", publishedAt: "", channelProfile: "" });
   const [search, setSearch] = useState("");
   const [fabOpen, setFabOpen] = useState(false);
   const [isOn, setIsOn] = useState(false);
@@ -108,14 +108,13 @@ export default function Dashboard() {
     const userId = auth.currentUser?.uid;
 
     // isOn 값에 따라 데이터를 불러올 db 경로를 설정 
-    const collectionPath = collection(db, "users", userId, "videos");  // isOn: false -> users/videos 컬렉션 사용
+    const collectionPath = collection(db, "gallery")  // isOn: true -> gallery 컬렉션 사용
 
     // isOn 값에 따라 상이한 경로에서 데이터를 불러온 후,
     // isOn 값에 따라 상이한 정렬 기준으로 데이터 정렬 
-    const q = query(
-      collectionPath, 
-      where("isPosted", "==", isOn),
-    );
+    const q = isOn
+    ? query(collectionPath, orderBy("recommend", "desc"))
+    : query(collectionPath, orderBy("createdAt", "desc"))
 
     // onSnapshot: firestore 데이터를 실시간으로 감지하는 이벤트 리스너 
     // snapshot: firestore에서 가져온 쿼리 전체 결과
@@ -240,16 +239,16 @@ export default function Dashboard() {
       // videoId를 추출했다면, db 경로 설정 후 
       if (!videoDetails) return;
       const userId = auth.currentUser.uid;
-      const collectionPath = collection(db, "users", userId, "videos"); 
+      const collectionPath = collection(db, "gallery"); 
 
       // 설정한 db 경로로 video 정보 저장. 이때 youtube api로 불러온 video 정보뿐 아니라 recommend 필드도 추가 
       await addDoc(collectionPath, {
         ...videoDetails,
-        isPosted: false,
+        userId: userId,
       });
 
       // newVideo는 다시 초기화해두기 (새로운 url 입력 받을 때까지)
-      setNewVideo({ isPosted: false, name: "", video: "", thumbnail: "", channel: "", views: "", likes: "", publishedAt: "", channelProfile: "", createdAt: serverTimestamp(), recommend: 0 });
+      setNewVideo({ name: "", video: "", thumbnail: "", channel: "", views: "", likes: "", publishedAt: "", channelProfile: "", createdAt: serverTimestamp(), recommend: 0 });
       setFabOpen(false);
     } catch (error) {
       console.error("Firestore에 비디오 추가 중 오류 발생: ", error);
@@ -428,13 +427,13 @@ export default function Dashboard() {
                     try {
                       const batch = writeBatch(db);
 
-                      // users/{user.uid}/videos에서 video.video와 일치하는 문서 찾기
-                      const userVideosRef = collection(db, "users", user.uid, "videos");
-                      const userQuery = query(userVideosRef, where("video", "==", video.video));
-                      const userQuerySnapshot = await getDocs(userQuery);
+                      // gallery에서 video.video와 일치하는 문서 찾기
+                      const galleryRef = collection(db, "gallery");
+                      const galleryQuery = query(galleryRef, where("video", "==", video.video));
+                      const galleryQuerySnapshot = await getDocs(galleryQuery);
 
-                      userQuerySnapshot.forEach((doc) => {
-                        batch.delete(doc.ref); // 🔥 users/{user.uid}/videos 문서 삭제
+                      galleryQuerySnapshot.forEach((doc) => {
+                        batch.delete(doc.ref); // 🔥 gallery 문서 삭제
                       });
 
                       // 🔥 모든 삭제 작업 실행
