@@ -120,7 +120,6 @@ export default function Dashboard() {
         q = query(
             collection(db, "gallery"), 
             where("userId", "==", userId),
-            where("isPosted", "==", false),
         );
     }
 
