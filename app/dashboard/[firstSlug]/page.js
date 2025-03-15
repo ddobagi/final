@@ -167,63 +167,41 @@ export default function VideoDetail() {
   }, [firstSlug, isOn, userEmail]);
 
   // 동적 라우팅 페이지에 표시할 video 데이터들을 fetch 해옴 
-  const fetchVideoData = async (firstSlug, mode) => {
+  const fetchVideoData = async (firstSlug) => {
 
     if (!auth.currentUser) return;
 
     try {
-        // 일단 로딩 걸어 둠 
-        setLoading(true);
-
         // mode 값에 따라 상이한 db 경로에서 문서를 불러옴 
         const userId = auth.currentUser?.uid;
-        let docRef = doc(db, "gallery", firstSlug);
-        const docSnap = await getDoc(docRef);
 
-        // 불러온 문서에서 전체 data와 essay, isPosted 데이터를 가져와
-        // video, essay, isPosted 상태 변수에 저장 
-        if (docSnap.exists()) {
-            const videoData = docSnap.data();
-            setVideo(videoData);
-            setEssay(videoData.essay || "");
-            setIsPosted(videoData.isPosted || false);
-            console.log(video);
-        } else {
-            throw new Error(`해당 비디오를 찾을 수 없습니다. (isOn: ${mode})`);
-        }
+        // ✅ Firestore 병렬 요청 최적화
+        const [docSnap, userDocSnap, userLikeSnap] = await Promise.all([
+          getDoc(doc(db, "gallery", firstSlug)),           // 영상 데이터
+          getDoc(doc(db, "users", userId)),                // 사용자 정보 (모드 가져오기)
+          getDoc(doc(db, "gallery", firstSlug, "likes", userId)), // 좋아요 여부 확인
+        ]);
+
+        if (!docSnap.exists()) throw new Error("비디오를 찾을 수 없습니다.");
+
+        const videoData = docSnap.data();
+        setVideo(videoData);
+        setEssay(videoData.essay || "");
+        setIsPosted(videoData.isPosted || false);
+
+        const mode = userDocSnap.exists() && userDocSnap.data().Mode === "public";
+        setIsOn(mode);
 
         // 만약 public 모드라면 
         if (mode) {
-
-          // 불러온 문서에서 recommend 데이터도 가져와 likes 상태 변수에 저장 
-          const videoData = docSnap.data();
           setLikes(videoData.recommend || 0);
-
-          // Promise.all: 두 개의 firestore 요청을 한 번에 처리. api 호출 최적화 
-          // userLikeSnap과 userDocSnap에 private 모드와 public 모드의 db 경로를 각각 저장 
-          const userId = auth.currentUser?.uid;
-          const [userLikeSnap, userDocSnap] = await Promise.all([
-            getDoc(doc(db, "gallery", firstSlug, "likes", userId)),
-            getDoc(doc(db, "users", userId))
-          ]);
-
-          // 만약 현재 페이지의 영상에 대한, 현재 user의 likes 필드가 존재한다면 liked 상태 변수를 true로 설정 
           setLiked(userLikeSnap.exists());
-
-          // 현재 사용자 db의 mode 필드의 값이 public이면 isOn 상태 변수를 true로, private면 isOn 상태 변수를 false로 설정 
-          if (userDocSnap.exists() && userDocSnap.data().Mode) {
-            setIsOn(userDocSnap.data().Mode === "public"); 
-          } else {
-            setIsOn(false); // mode 값이 없으면 기본값(false)으로 설정
-          }
         }
+        
     } catch (error) {
         console.error("Firestore에서 비디오 데이터 가져오는 중 오류 발생: ", error);
         setError(error.message);
-    } finally {
-        // 필요한 데이터를 모두 가져온 후 로딩 해제 
-        setLoading(false);
-    }
+    } 
   };
 
   // video 게시 & 게시 취소 관리 
