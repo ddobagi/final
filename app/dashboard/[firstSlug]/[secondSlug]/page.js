@@ -390,13 +390,12 @@ const handleTogglePost = async () => {
                     try {
                       const batch = writeBatch(db);
 
-                      // users/{user.uid}/videos에서 video.video와 일치하는 문서 찾기
                       const userVideosRef = collection(db, "gallery", firstSlug, "comment");
                       const userQuery = query(userVideosRef, where("video", "==", video.video));
                       const userQuerySnapshot = await getDocs(userQuery);
 
                       userQuerySnapshot.forEach((doc) => {
-                        batch.delete(doc.ref); // 🔥 users/{user.uid}/videos 문서 삭제
+                        batch.delete(doc.ref); 
                       });
 
                       // 🔥 모든 삭제 작업 실행
