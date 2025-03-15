@@ -23,7 +23,7 @@ import { ThumbsUp, ArrowLeft, Heart } from "lucide-react";
 
 // export default: 다른 곳에서 import 할 수 있게 함
 // 다른 곳에서 import 할 수 있는 함수형 컴포넌트를 정의 
-export default function VideoDetail() {
+export default function firstSlug() {
 
   // URL에서 slug 가져오기
   const { firstSlug } = useParams(); 
@@ -49,9 +49,8 @@ export default function VideoDetail() {
   const [essay, setEssay] = useState("");
   const [isEditing, setIsEditing] = useState(false);
 
-  // loading & error 
+  // previousPage & error 
   const [previousPage, setPreviousPage] = useState("/dashboard");
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   // 댓글 
@@ -423,6 +422,7 @@ export default function VideoDetail() {
     return match ? match[1] : null;
   };
 
+  // 🚗🌴 댓글 카드 ui 정의
   const ReplyCard = ({ reply, firstSlug, handleReplyLike, isOn }) => (
     <Card key={reply.id} className="mt-3 w-full max-w-2xl">
       <Link href={`/dashboard/${firstSlug}/${reply.id}`} passHref>
@@ -430,7 +430,6 @@ export default function VideoDetail() {
           <iframe
             className="w-full h-full rounded-t-lg"
             src={`https://www.youtube.com/embed/${reply.videoId}`}
-            frameBorder="0"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
           ></iframe>
@@ -466,27 +465,11 @@ export default function VideoDetail() {
       </CardContent>
     </Card>
   );
-  
 
-  if (loading) return <p className="text-center mt-10">로딩 중...</p>;
   if (error) return <p className="text-center mt-10 text-red-500">{error}</p>;
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  /// html ///
+  /// 🚜🚜🚜🚜🚜 HTML 🚜🚜🚜🚜🚜 ///
   return (
     <div className="flex flex-col items-center w-full p-6">
       <div className="w-full max-w-2xl flex justify-between">
@@ -506,7 +489,6 @@ export default function VideoDetail() {
               className="w-full h-full rounded-t-lg"
               src={`https://www.youtube.com/embed/${getYouTubeVideoID(video.video)}?autoplay=0&controls=1`}
               title={video.title}
-              frameBorder="0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
             ></iframe>
@@ -609,7 +591,6 @@ export default function VideoDetail() {
                       <iframe
                         className="w-full h-full rounded-t-lg"
                         src={`https://www.youtube.com/embed/${reply.videoId}`}
-                        frameBorder="0"
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                         allowFullScreen
                       ></iframe>
