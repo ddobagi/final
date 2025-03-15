@@ -362,9 +362,7 @@ export default function VideoDetail() {
     const replyRef = doc(db, "gallery", firstSlug, "comment", commentId);
     const userLikeRef = doc(db, "gallery", firstSlug, "comment", commentId, "likes", userId);
   
-    try {
-      const likeSnap = await getDoc(userLikeRef); // 현재 사용자가 좋아요를 눌렀는지 확인
-  
+    try {  
       setAllReplies((prevAllReplies) =>
         prevAllReplies.map((reply) =>
           reply.id === commentId
@@ -377,15 +375,14 @@ export default function VideoDetail() {
         )
       );
   
-      if (likeSnap.exists()) {
-        // 🔥 이미 좋아요를 눌렀다면 취소
-        await updateDoc(replyRef, { recommend: increment(-1) }); // Firestore에서 recommend 1 감소
-        await deleteDoc(userLikeRef); // 현재 유저의 like 문서 삭제
-      } else {
-        // 🔥 좋아요 추가
-        await updateDoc(replyRef, { recommend: increment(1) }); // Firestore에서 recommend 1 증가
-        await setDoc(userLikeRef, { liked: true }); // 현재 유저의 like 문서 추가
-      }
+      const actions = reply.liked
+        // 좋아요를 이미 눌렀다면 
+        ? [updateDoc(replyRef, { recommend: increment(-1) }), deleteDoc(userLikeRef)] // 좋아요 취소
+        // 좋아요를 누르지 않았다면 
+        : [updateDoc(replyRef, { recommend: increment(1) }), setDoc(userLikeRef, { liked: true })]; // 좋아요 추가
+
+        await Promise.all(actions);
+
     } catch (error) {
       console.error("🔥 답글 좋아요 업데이트 실패:", error);
     }
