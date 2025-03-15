@@ -29,14 +29,22 @@ export default function DashboardPage() {
 
   // useState() : react에서 상태를 관리하는 hook 
   // state 정보와 setter 함수가 배열[]로 정의됨 
+
+  // user info 
   const [user, setUser] = useState(null);
+  const [userEmail, setUserEmail] = useState("");
+  const [isOn, setIsOn] = useState(false);
+
+  // video info 
   const [videos, setVideos] = useState([]);
   const [newVideo, setNewVideo] = useState({ name: "", video: "", thumbnail: "", channel: "", views: "", likes: "", publishedAt: "", channelProfile: "" });
+  
+  // search info 
   const [search, setSearch] = useState("");
-  const [fabOpen, setFabOpen] = useState(false);
-  const [isOn, setIsOn] = useState(false);
-  const [userEmail, setUserEmail] = useState("");
   const [searchMode, setSearchMode] = useState(false);
+
+  // fab info 
+  const [fabOpen, setFabOpen] = useState(false);
 
   // useRef(): 컴포넌트가 렌더링 되어도 값을 유지하는 참조 객체를 생성하는 hook 
   const fabRef = useRef(null);
@@ -77,17 +85,17 @@ export default function DashboardPage() {
     return () => unsubscribe();
   }, [router]);
 
-    // 🚗🌴 대시보드 페이지에 표시할 영상의 데이터를 fetch해오는 함수
-    const fetchVideoData = async (mode) => {
-      if (!user) return;
-      const q = mode
-        ? query(collection(db, "gallery"), where("isPosted", "==", true))
-        : query(collection(db, "gallery"), where("userId", "==", auth.currentUser?.uid));
+  // 🚗🌴 대시보드 페이지에 표시할 영상의 데이터를 fetch해오는 함수
+  const fetchVideoData = async (mode) => {
+    if (!user) return;
+    const q = mode
+      ? query(collection(db, "gallery"), where("isPosted", "==", true))
+      : query(collection(db, "gallery"), where("userId", "==", auth.currentUser?.uid));
   
-      return onSnapshot(q, (snapshot) => {
-        setVideos(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
-      });
-    };
+    return onSnapshot(q, (snapshot) => {
+      setVideos(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
+    });
+  };
 
   useEffect(() => {
     function handleClickOutside(event) {
