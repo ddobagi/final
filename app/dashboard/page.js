@@ -72,10 +72,10 @@ export default function DashboardPage() {
           setIsOn(mode);
 
           await fetchVideoData(mode);
+          console.log("fetchvideodata 실행되었음");
         } catch (error) {
           console.error("사용자 Mode 데이터를 가져오는 중 오류 발생:", error);
           await fetchVideoData(false);
-          console.log("여기가 실행");
         }
       } else {
         router.push("/");
@@ -88,6 +88,7 @@ export default function DashboardPage() {
 
   // 🚗🌴 대시보드 페이지에 표시할 영상의 데이터를 fetch해오는 함수
   const fetchVideoData = async (mode) => {
+    console.log("user");
     if (!user) return;
     const q = mode
       ? query(collection(db, "gallery"), where("isPosted", "==", true))
