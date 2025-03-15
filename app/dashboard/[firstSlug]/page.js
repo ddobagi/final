@@ -296,17 +296,13 @@ export default function VideoDetail() {
 
   // 🚨 답글 기능 🚨
   const handlePostReply = async () => {
-    if (!replyVideoUrl || !replyEssay) {
-      alert("비디오 URL과 에세이를 입력해주세요.");
-      return;
-    }
+    if (!replyVideoUrl || !replyEssay) return;
   
     try {
       // 🔥 YouTube API를 통해 답글 영상 정보 가져오기
       const videoDetails = await getYoutubeVideoDetails(replyVideoUrl);
       if (!videoDetails) {
-        console.log(replyVideoUrl);
-        alert("유효한 YouTube 영상이 아닙니다.");
+        alert("영상 정보를 불러올 수 없습니다. Youtube Url을 확인하세요.");
         return;
       }
   
@@ -330,21 +326,21 @@ export default function VideoDetail() {
         isPosted: false,
       });
   
-      // 🔥 상태 업데이트 (입력 필드 초기화)
+      // 상태 업데이트 (입력 필드 초기화)
       setReplyVideoUrl("");
       setReplyEssay("");
       setReplying(false);
+      // 여기까지가 답글 추가하는 기능 
   
-      // 🔥 Firestore에서 isPosted가 true인 답글만 가져오기
-      const q = query(repliesRef, where("isPosted", "==", true));
-      const querySnapshot = await getDocs(q);  
-      setAllReplies(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      // 추가한 답글을, allReplies or myReplies 변수에 담아두기까지 해야 끝! 
+    const [allRepliesSnapshot, myRepliesSnapshot] = await Promise.all([
+      getDocs(query(repliesRef, where("isPosted", "==", true))),  // isPosted가 true인 답글 가져오기
+      getDocs(query(repliesRef, where("isPosted", "==", false), where("user", "==", userEmail)))  // isPosted가 false + 내 답글만 가져오기
+    ]);
 
-      const x = query(repliesRef, where("isPosted", "==", false), where("user", "==", userEmail));
-      const querySnapshot2 = await getDocs(x);  // ✅ 변수명을 querySnapshot으로 변경
-
-      // ✅ Firestore 문서 데이터를 일반 객체 배열로 변환하여 상태 업데이트
-      setMyReplies(querySnapshot2.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    // ✅ Firestore 데이터 상태 업데이트
+    setAllReplies(allRepliesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    setMyReplies(myRepliesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
 
     } catch (error) {
       console.error("🔥 답글 저장 오류: ", error);
@@ -353,7 +349,7 @@ export default function VideoDetail() {
   
   
 
-  
+  // Good! 
   const handleReplyLike = async (commentId) => {
     if (!auth.currentUser) return;
   
@@ -363,18 +359,22 @@ export default function VideoDetail() {
     const userLikeRef = doc(db, "gallery", firstSlug, "comment", commentId, "likes", userId);
   
     try {  
+      // UI를 변경 
+      // prevAllReplies: Firestore에서 가져온, 기존 allReplies '배열'
+      // reply: prevAllReplies 배열의 각 요소를 받는 변수. .map()을 사용하면, 배열의 각 요소를 자동으로 받음 
       setAllReplies((prevAllReplies) =>
         prevAllReplies.map((reply) =>
-          reply.id === commentId
+          reply.id === commentId // reply.id === commentId면 liked와 recommend 필드 값 변경  
             ? {
                 ...reply,
-                liked: !likeSnap.exists(), // 좋아요 상태 변경
-                recommend: reply.recommend + (likeSnap.exists() ? -1 : 1), // recommend 업데이트
+                liked: !reply.liked, // 좋아요 상태 변경
+                recommend: reply.liked ? reply.recommend - 1 : reply.recommend + 1, // 좋아요 수 업데이트
               }
-            : reply
+            : reply // reply.id !== commentId면 기존 값 그대로 반환 
         )
       );
   
+      // db를 변경  
       const actions = reply.liked
         // 좋아요를 이미 눌렀다면 
         ? [updateDoc(replyRef, { recommend: increment(-1) }), deleteDoc(userLikeRef)] // 좋아요 취소
