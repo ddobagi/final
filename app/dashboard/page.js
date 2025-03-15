@@ -96,6 +96,9 @@ export default function DashboardPage() {
         ? query(collection(db, "gallery"), where("isPosted", "==", true))
         : query(collection(db, "gallery"), where("userId", "==", userId));
       
+      // onSnapshot: firestore 컬렉션의 변경을 감지하는 이벤트 리스너 
+      // but, 처음 한 번은 현재 컬렉션의 데이터를 가져와 snapshot에 변수에 저장함
+      // doc: snapshot.docs 배열의 각 요소를 받는 변수. .map()을 사용하면, 배열의 각 요소를 자동으로 받음 
       const unsubscribe = onSnapshot(q, (snapshot) => {
         setVideos(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
       });
