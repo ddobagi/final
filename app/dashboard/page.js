@@ -25,7 +25,7 @@ import { Plus, X, Trash2, Search, ArrowLeft, Heart  } from "lucide-react";
 
 // export default: 다른 곳에서 import 할 수 있게 함 (ex. import Dashboard from "./Dashboard")
 // 다른 곳에서 import 할 수 있는 함수형 컴포넌트를 정의 
-export default function Dashboard() {
+export default function DashboardPage() {
 
   // useState() : react에서 상태를 관리하는 hook 
   // state 정보와 setter 함수가 배열[]로 정의됨 

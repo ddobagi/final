@@ -98,7 +98,6 @@ export default function FirstSlugPage() {
                 await fetchVideoData(firstSlug, false);
             }
         } else {
-            console.log("❌ 로그인되지 않음");
             router.push("/");
             return;
         }
