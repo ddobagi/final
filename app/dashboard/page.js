@@ -30,7 +30,6 @@ export default function DashboardPage() {
   // useState() : react에서 상태를 관리하는 hook 
   // state 정보와 setter 함수가 배열[]로 정의됨 
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [videos, setVideos] = useState([]);
   const [newVideo, setNewVideo] = useState({ name: "", video: "", thumbnail: "", channel: "", views: "", likes: "", publishedAt: "", channelProfile: "" });
   const [search, setSearch] = useState("");
@@ -49,54 +48,34 @@ export default function DashboardPage() {
   // 반드시 "NEXT_PUBLIC_~"가 붙어야 함 
   const API_KEY = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY;
 
-  // useEffect: 컴포넌트가 렌더링될 때 실행되는 react hook 
+  // 🚗🌴 페이지가 렌더링 되었을 때, user&slug 정보를 바탕으로 fetchVideoData 함수를 실행하는 useEffect 
   useEffect(() => {
-
-    // onAuthStateChanged(auth, callback): 사용자의 로그인 상태 변경을 감지하는 firebase authentication의 이벤트 리스너 
-    const unsubscribe = onAuthStateChanged(auth, async(currentUser) => {
-
-      // 현재 사용자와 현재 사용자의 이메일을, 각각 user와 userEmail로 설정 
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
         setUser(currentUser);
         setUserEmail(currentUser.email);
+        console.log("사용자 이메일:", currentUser.email);
 
         try {
-          // 현재 사용자의 mode 데이터를 가져옴 
-          const userDocRef = doc(db, "users", currentUser.uid); // db 경로 정의
-          const userDocSnap = await getDoc(userDocRef); // 해당 db 경로의 문서 불러옴 
-  
-          if (userDocSnap.exists() && userDocSnap.data().Mode) {
-            setIsOn(userDocSnap.data().Mode === "public"); // mode 값이 public이면, isOn은 true 
-          } else {
-            setIsOn(false); // mode 값이 false면 isOn은 false 
-          }
+          const userDocRef = doc(db, "users", currentUser.uid);
+          const userDocSnap = await getDoc(userDocRef);
+          const userData = userDocSnap.exists() ? userDocSnap.data() : {};
+          const mode = userData.Mode === "public";
+          setIsOn(mode);
+
+          await fetchVideoData(mode);
         } catch (error) {
           console.error("사용자 Mode 데이터를 가져오는 중 오류 발생:", error);
-          setIsOn(false); // 오류 발생 시 기본값 설정
+          await fetchVideoData(false);
         }
-
-        // 현재 사용자 정보가 없다면 로그인하지 않았다는 의미이므로,
-        // 로그인 페이지로 이동 & userEmail도 초기화 
       } else {
         router.push("/");
-        setUserEmail("")
+        setUserEmail("");
       }
-
-      // 로그인 상태 파악을 마친 후, loading 마침 
-      setLoading(false);
     });
 
-    // 간단히 표현하면
-    // useEffect (() => {
-    // const unsubcribe = onAuthStateChanged(auth, callback);
-    // return () => unsubscribe();
-    // }, []); 
-    // '컴포넌트가 rendering 되면, 정의한 unsubscribe 함수를 return하세요'인 것 + 이벤트 리스너 해제 
     return () => unsubscribe();
-
-  // 의존성 배열에 router 포함 -> router 값이 변경될 때마다 실행 
   }, [router]);
-
 
   // useEffect: 컴포넌트가 렌더링될 때 실행되는 react hook 
   useEffect(() => {
@@ -123,6 +102,18 @@ export default function DashboardPage() {
         );
     }
 
+    // 🚗🌴 대시보드 페이지에 표시할 영상의 데이터를 fetch해오는 함수
+    const fetchVideoData = async (mode) => {
+      if (!user) return;
+      const q = mode
+        ? query(collection(db, "gallery"), where("isPosted", "==", true))
+        : query(collection(db, "gallery"), where("userId", "==", auth.currentUser?.uid));
+  
+      return onSnapshot(q, (snapshot) => {
+        setVideos(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
+      });
+    };
+
     // Firestore 실시간 감지
     const unsubscribe = onSnapshot(q, (snapshot) => {
         setVideos(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
@@ -135,7 +126,6 @@ export default function DashboardPage() {
 }, [user, isOn]);
 
   useEffect(() => {
-
     function handleClickOutside(event) {
 
       // 앞서 const fabRef = useRef(null); 로 정의
@@ -158,55 +148,44 @@ export default function DashboardPage() {
   // 의존성 배열이 비어있음 -> 컴포넌트가 최초 렌더링(마운트) 될 때 한 번만 실행되고, 이후 실행되지 않음
   }, []);
 
-  // youtube 영상들의 세부 정보를 youtube api를 이용해 가져옴, input: url 
+  // 🚗🌴 youtube url을 입력 받아, 각종 video 정보를 담은 객체로 반환하는 함수 
   const getYoutubeVideoDetails = async (url) => {
     try {
+      const videoId = getYouTubeVideoID(url);
+      if (!videoId) throw new Error("유효한 YouTube 링크가 아닙니다.");
 
-      // pattern과 url을 match (형식을 맞춰봄) 
-      const pattern = /(?:youtu\.be\/|youtube\.com\/.*[?&]v=|youtube\.com\/embed\/|youtube\.com\/v\/|youtube\.com\/shorts\/|youtube\.com\/user\/.*#p\/u\/\d\/|youtube\.com\/watch\?.*?v=)([a-zA-Z0-9_-]{11})/;
-      const match = url.match(pattern);
-  
-      // 만약 match되지 않는다면 에러 메시지 출력 
-      if (!match || !match[1]) throw new Error("유효한 YouTube 링크가 아닙니다.");
-      
-      // 만약 match된다면 \/ 사이의 값(videID에 해당)을 videoId 변수에 저장 
-      const videoId = match[1];
-  
-      // videoId 값을 바탕으로, youtube api를 이용해 video 정보를 가져옴
-      // 이때 youtube api key를 발급받아 전달해야 하며, 불러온 video 정보는 json 파일로 저장 
-      const videoResponse = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&id=${videoId}&key=${API_KEY}`);
+      // YouTube API 호출 (영상 정보 가져오기)
+      const videoResponse = await fetch(
+        `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&id=${videoId}&key=${API_KEY}`
+      );
       const videoData = await videoResponse.json();
 
-      // video 정보가 담긴 json 파일(A)에서, 'item' key에 해당하는 value가 존재하는지 확인하기 
-      if (!videoData.items || videoData.items.length === 0) throw new Error("비디오 정보를 가져올 수 없습니다.");
-      
-      // 'item' key에 해당하는 value 역시 리스트(A-item)이며, 해당 리스트에서 첫 번째 값을 받아오는데, 그 값이 딕셔너리(A-item-1)임
-      // 'snippet' key의 value에 해당하는 딕셔너리(A-item-1-snippet)는, title, channelTitle, publishedAt, thumbnails, channelId를 key로 가지고 있음
-      // 'statistics' key의 value에 해당하는 딕셔너리(A-item-1-statistics)는 viewcount, likeCount를 key로 가지고 있음 
+      if (!videoData.items || videoData.items.length === 0)
+        throw new Error("비디오가 없습니다.");
+
       const videoInfo = videoData.items[0];
       const { title, channelTitle, publishedAt, thumbnails, channelId } = videoInfo.snippet;
       const { viewCount, likeCount } = videoInfo.statistics;
-  
-      // 앞서 불러온 channelId 값을 바탕으로, youtube api를 이용해 channel 정보를 불러옴 
-      // 이때 youtube api key를 발급받아 전달해야 하며, 불러온 channel 정보는 json 파일로 저장 
-      const channelResponse = await fetch(`https://www.googleapis.com/youtube/v3/channels?part=snippet&id=${channelId}&key=${API_KEY}`);
+
+      // YouTube API 호출 (채널 정보 가져오기)
+      const channelResponse = await fetch(
+        `https://www.googleapis.com/youtube/v3/channels?part=snippet&id=${channelId}&key=${API_KEY}`
+      );
       const channelData = await channelResponse.json();
-  
-      // channel 정보가 담긴 json 파일(A)에서, 'items' key에 해당하는 value가 있는지 확인 
-      if (!channelData.items || channelData.items.length === 0) throw new Error("채널 정보를 가져올 수 없습니다.");
-      
-      // 'item' key에 해당하는 value 역시 리스트(A-item)이며, 해당 리스트에서 첫 번째 값을 받아오는데, 그 값이 딕셔너리(A-item-1)임
-      // 이후 계속 자료 구조를 타고 내려가 채널 프로필 이미지 url을 가져옴 
+
+      if (!channelData.items || channelData.items.length === 0)
+        throw new Error("채널 정보를 가져올 수 없습니다.");
+
       const channelProfile = channelData.items[0].snippet.thumbnails.default.url;
-  
-      // video 및 채널에 관해 불러온 모든 정보를 딕셔너리 형태로 return
-      // 이때, getYoutubeVideoDetails를 사용한 시각도 기록 
+
+      // 불러온 영상 정보를 객체로 반환 (답글에도 사용 가능하도록)
       return {
+        videoId,
         name: title,
         video: url,
         thumbnail: thumbnails.high.url,
         channel: channelTitle,
-        channelProfile: channelProfile, 
+        channelProfile,
         views: viewCount,
         likes: likeCount,
         publishedAt: publishedAt.slice(0, 10),
@@ -214,10 +193,11 @@ export default function DashboardPage() {
         recommend: 0,
       };
     } catch (error) {
-      console.error("YouTube API 오류:", error);
+      console.error("🔥 YouTube API 오류:", error);
       return null;
     }
   };
+
 
   // e: 이벤트 객체, 이벤트 감지 
   const handleInputChange = async (e) => {
@@ -279,9 +259,8 @@ export default function DashboardPage() {
     }
   };
 
-  // url을 입력 받아 videoID만 추출하는 함수 (input: url)
+  // 🚗🌴 youtube url을 입력 받아 videoID만 추출하는 함수
   const getYouTubeVideoID = (url) => {
-
     // 괄호 안의 정규식과, url을 match (형식을 맞춰 봄)
     // 형식이 일치하면, match[1]을 사용해 \/ 사이의 값(videoID에 해당)만 반환 
     const pattern = /(?:youtu\.be\/|youtube\.com\/.*[?&]v=|youtube\.com\/embed\/|youtube\.com\/v\/|youtube\.com\/shorts\/|youtube\.com\/user\/.*#p\/u\/\d\/|youtube\.com\/watch\?.*?v=)([a-zA-Z0-9_-]{11})/;
@@ -289,8 +268,7 @@ export default function DashboardPage() {
     return match ? match[1] : null;
   };
 
-  // videos 배열을 isOn 상태에 따라 다른 기준으로 정렬
-  // 원본 videos 배열에 영향을 끼치지 않도록, [...videos]로 배열을 복사해 사용 
+  // 🚗🌴 videos 배열을 isOn 상태에 따라 다른 기준으로 정렬하는 함수 
   const sortedVideos = [...videos].sort((a, b) => {
     if (isOn) {
       return Number(b.recommend) - Number(a.recommend); // isOn이 true이면 recommend를 기준으로 정렬, recommend가 많은 것(b)부터 정렬 
@@ -299,7 +277,7 @@ export default function DashboardPage() {
     }
   });
 
-  // 현재 user의 email에서, @ 앞부분만 반환 
+  // 🚗🌴 현재 사용자의 email에서, @ 앞부분만 반환하는 함수 
   function getEmailUsername(email) {
     if (!email || typeof email !== "string") return "";
     return email.split("@")[0];
