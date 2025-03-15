@@ -96,6 +96,7 @@ export default function DashboardPage() {
   
     return onSnapshot(q, (snapshot) => {
       setVideos(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
+      console.log(videos);
     });
   };
 
