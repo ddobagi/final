@@ -128,7 +128,7 @@ export default function VideoDetail() {
           
         // ✅ Firestore 쿼리 적용 (isPosted가 true인 것만 가져오기)
         const allRepliesQuery = query(repliesRef, where("isPosted", "==", true));
-        const myRepliesQuery = query(repliesRef, wher("isPosted", "==", false), where("user", "==", userEmail));
+        const myRepliesQuery = query(repliesRef, where("isPosted", "==", false), where("user", "==", userEmail));
 
         // ✅ 쿼리 실행
         const [allRepliesSnapshot, myRepliesSnapshot] = await Promise.all([
@@ -392,7 +392,7 @@ export default function VideoDetail() {
   };
   
   
-
+ // Good! 깔끔하다!! 
   const getYoutubeVideoDetails = async (url) => {
     try {
       // YouTube URL에서 videoId 추출
@@ -409,7 +409,7 @@ export default function VideoDetail() {
       const videoData = await videoResponse.json();
   
       if (!videoData.items || videoData.items.length === 0)
-        throw new Error("비디오 정보를 가져올 수 없습니다.");
+        throw new Error("비디오가 없습니다.");
   
       const videoInfo = videoData.items[0];
       const { title, channelTitle, publishedAt, thumbnails, channelId } = videoInfo.snippet;
