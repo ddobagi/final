@@ -23,7 +23,7 @@ import { ThumbsUp, ArrowLeft, Heart } from "lucide-react";
 
 // export default: 다른 곳에서 import 할 수 있게 함
 // 다른 곳에서 import 할 수 있는 함수형 컴포넌트를 정의 
-export default function firstSlug() {
+export default function FirstSlugPage() {
 
   // URL에서 slug 가져오기
   const { firstSlug } = useParams(); 
@@ -82,8 +82,8 @@ export default function firstSlug() {
 
             try {
                 // 현재 user 정보를 가져옴 
-                const userDocRef = doc(db, "users", currentUser.uid); // db 경로 정의
-                const userDocSnap = await getDoc(userDocRef);// 해당 db 경로의 문서 불러옴 
+                const userDocRef = doc(db, "users", currentUser.uid); 
+                const userDocSnap = await getDoc(userDocRef);
 
                 // 해당 문서 Mode 필드의 값이 public이면 mode = true, 아니면 mode = false
                 // isOn 값도 mode 값에 따라 변경 
@@ -213,7 +213,6 @@ export default function firstSlug() {
     if (!auth.currentUser) return;
 
     try {
-        // mode 값에 따라 상이한 db 경로에서 문서를 불러옴 
         const userId = auth.currentUser.uid;
 
         // ✅ Firestore 병렬 요청 최적화
@@ -266,7 +265,7 @@ export default function firstSlug() {
     if (!auth.currentUser) return;
 
     try {
-      const docRef = doc(db, "gallery", firstSlug); // db 경로 설정 
+      const docRef = doc(db, "gallery", firstSlug);
 
       await updateDoc(docRef, {
         essay: essay,
@@ -362,7 +361,6 @@ export default function firstSlug() {
   const handleReplyLike = async (commentId) => {
     if (!auth.currentUser) return;
   
-    // Firestore 경로 설정
     const userId = auth.currentUser?.uid;
     const replyRef = doc(db, "gallery", firstSlug, "comment", commentId);
     const userLikeRef = doc(db, "gallery", firstSlug, "comment", commentId, "likes", userId);
