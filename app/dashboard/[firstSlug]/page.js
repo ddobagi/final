@@ -24,10 +24,7 @@ import { ThumbsUp, ArrowLeft, Heart } from "lucide-react";
 // export default: 다른 곳에서 import 할 수 있게 함
 // 다른 곳에서 import 할 수 있는 함수형 컴포넌트를 정의 
 export default function VideoDetail() {
-
-  const previousPage = document.referrer.includes("/dashboard/likes") ? "/dashboard/likes" : "/dashboard";
-
-
+  
   // URL에서 slug 가져오기
   const { firstSlug } = useParams(); 
 
@@ -53,6 +50,7 @@ export default function VideoDetail() {
   const [isEditing, setIsEditing] = useState(false);
 
   // loading & error 
+  const [previousPage, setPreviousPage] = useState("/dashboard");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -70,6 +68,10 @@ export default function VideoDetail() {
   // useEffect: 컴포넌트가 렌더링될 때 실행되는 react hook 
   // 🚗🌴 페이지가 렌더링 되었을 때, user&slug 정보를 바탕으로 fetchVideoData 함수를 실행하는 useEffect 
   useEffect(() => {
+    setPreviousPage(
+      document.referrer.includes("/dashboard/likes") ? "/dashboard/likes" : "/dashboard"
+    );
+
     // onAuthStateChanged(auth, callback): 사용자의 로그인 상태 변경을 감지하는 firebase authentication의 이벤트 리스너 
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
 
