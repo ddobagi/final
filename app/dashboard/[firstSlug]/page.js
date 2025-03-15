@@ -36,34 +36,40 @@ export default function VideoDetail() {
 
   // useState() : react에서 상태를 관리하는 hook 
   // state 정보와 setter 함수가 배열[]로 정의됨 
+
+  // user info 
   const [user, setUser] = useState(null);
-  const [video, setVideo] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [essay, setEssay] = useState("");
-  const [isEditing, setIsEditing] = useState(false);
-  const [isPosted, setIsPosted] = useState(false);
+  const [userEmail, setUserEmail] = useState("");
   const [isOn, setIsOn] = useState(true);
+
+  // video info 
+  const [video, setVideo] = useState(null);
   const [liked, setLiked] = useState(false);
   const [likes, setLikes] = useState(1);
-  const [userEmail, setUserEmail] = useState("");
+  const [isPosted, setIsPosted] = useState(false);
 
-  // 🚨 답글 기능 🚨
+  // essay info 
+  const [essay, setEssay] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
 
+  // loading & error 
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // 댓글 
   const [replying, setReplying] = useState(false); // 답글 입력 UI 활성화 여부
   const [replyVideoUrl, setReplyVideoUrl] = useState(""); // 답글 비디오 URL
   const [replyEssay, setReplyEssay] = useState(""); // 답글 에세이 내용
-  const [allReplies, setAllReplies] = useState([]); // 답글 목록
-  const [myReplies, setMyReplies] = useState([]); // 답글 목록
+  const [allReplies, setAllReplies] = useState([]); // 전체 댓글 목록
+  const [myReplies, setMyReplies] = useState([]); // 작성 중인 댓글 목록
 
   // vercel 환경 변수로 저장해둔 youtube api key
   // 반드시 "NEXT_PUBLIC_~"가 붙어야 함 
   const API_KEY = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY;
-  
 
   // useEffect: 컴포넌트가 렌더링될 때 실행되는 react hook 
+  // 🚗🌴 페이지가 렌더링 되었을 때, user&slug 정보를 바탕으로 fetchVideoData 함수를 실행하는 useEffect 
   useEffect(() => {
-
     // onAuthStateChanged(auth, callback): 사용자의 로그인 상태 변경을 감지하는 firebase authentication의 이벤트 리스너 
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
 
@@ -71,8 +77,7 @@ export default function VideoDetail() {
         if (currentUser) {
             setUser(currentUser);
             setUserEmail(currentUser.email);
-            console.log(currentUser.email);
-            console.log(firstSlug);
+            console.log("사용자 이메일:", currentUser.email, "firstSlug:", firstSlug);
 
             try {
                 // 현재 user 정보를 가져옴 
@@ -81,7 +86,8 @@ export default function VideoDetail() {
 
                 // 해당 문서 Mode 필드의 값이 public이면 mode = true, 아니면 mode = false
                 // isOn 값도 mode 값에 따라 변경 
-                const mode = userDocSnap.exists() && userDocSnap.data().Mode === "public";  
+                const userData = userDocSnap.exists() ? userDocSnap.data() : {};
+                const mode = userData.Mode === "public";
                 setIsOn(mode);
 
                 // 현재 페이지의 slug 값과 mode 값에 알맞게 fetchVideoData 함수 실행 
@@ -97,28 +103,13 @@ export default function VideoDetail() {
         }
     });
 
-    // 간단히 표현하면
-    // useEffect (() => {
-    // const unsubcribe = onAuthStateChanged(auth, callback);
-    // return () => unsubscribe();
-    // }, []); 
     // '컴포넌트가 rendering 되면, 정의한 unsubscribe 함수를 return하세요'인 것 + 이벤트 리스너 해제 
     return () => unsubscribe();
   
   // 의존성 배열에 slug와 router 포함 -> slug 값이 변경될 때마다 & router 값이 변경될 때마다 실행
   }, [firstSlug, router]);
 
-  // url을 입력 받아 videoID만 추출하는 함수 (input: url)
-  const getYouTubeVideoID = (url) => {
-
-    // 괄호 안의 정규식과, url을 match (형식을 맞춰 봄)
-    // 형식이 일치하면, match[1]을 사용해 \/ 사이의 값(videoID에 해당)만 반환
-    const pattern = /(?:youtu\.be\/|youtube\.com\/.*[?&]v=|youtube\.com\/embed\/|youtube\.com\/v\/|youtube\.com\/shorts\/|youtube\.com\/user\/.*#p\/u\/\d\/|youtube\.com\/watch\?.*?v=)([a-zA-Z0-9_-]{11})/;
-    const match = url.match(pattern);
-    return match ? match[1] : null;
-  };
-
-  // 🚨 답글 기능 🚨
+  // 🚗🌴 전체 댓글 or 작성 중인 댓글 목록을 불러오는 useEffect 
   useEffect(() => {
     if (!isOn) return;
 
@@ -166,14 +157,63 @@ export default function VideoDetail() {
     fetchReplies();
   }, [firstSlug, isOn, userEmail]);
 
-  // 동적 라우팅 페이지에 표시할 video 데이터들을 fetch 해옴 
-  const fetchVideoData = async (firstSlug) => {
+  // 🚗🌴 youtube url을 입력 받아, 각종 video 정보를 담은 객체로 반환하는 함수 
+  const getYoutubeVideoDetails = async (url) => {
+    try {
+      const videoId = getYouTubeVideoID(url);
+      if (!videoId) throw new Error("유효한 YouTube 링크가 아닙니다.");
 
+      // YouTube API 호출 (영상 정보 가져오기)
+      const videoResponse = await fetch(
+        `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&id=${videoId}&key=${API_KEY}`
+      );
+      const videoData = await videoResponse.json();
+
+      if (!videoData.items || videoData.items.length === 0)
+        throw new Error("비디오가 없습니다.");
+
+      const videoInfo = videoData.items[0];
+      const { title, channelTitle, publishedAt, thumbnails, channelId } = videoInfo.snippet;
+      const { viewCount, likeCount } = videoInfo.statistics;
+
+      // YouTube API 호출 (채널 정보 가져오기)
+      const channelResponse = await fetch(
+        `https://www.googleapis.com/youtube/v3/channels?part=snippet&id=${channelId}&key=${API_KEY}`
+      );
+      const channelData = await channelResponse.json();
+
+      if (!channelData.items || channelData.items.length === 0)
+        throw new Error("채널 정보를 가져올 수 없습니다.");
+
+      const channelProfile = channelData.items[0].snippet.thumbnails.default.url;
+
+      // 불러온 영상 정보를 객체로 반환 (답글에도 사용 가능하도록)
+      return {
+        videoId,
+        name: title,
+        video: url,
+        thumbnail: thumbnails.high.url,
+        channel: channelTitle,
+        channelProfile,
+        views: viewCount,
+        likes: likeCount,
+        publishedAt: publishedAt.slice(0, 10),
+        createdAt: serverTimestamp(),
+        recommend: 0,
+      };
+    } catch (error) {
+      console.error("🔥 YouTube API 오류:", error);
+      return null;
+    }
+  };
+
+  // 🚗🌴 동적 라우팅 페이지에 표시할, 메인 영상의 데이터를 fetch해오는 함수 
+  const fetchVideoData = async (firstSlug) => {
     if (!auth.currentUser) return;
 
     try {
         // mode 값에 따라 상이한 db 경로에서 문서를 불러옴 
-        const userId = auth.currentUser?.uid;
+        const userId = auth.currentUser.uid;
 
         // ✅ Firestore 병렬 요청 최적화
         const [docSnap, userDocSnap, userLikeSnap] = await Promise.all([
@@ -185,11 +225,12 @@ export default function VideoDetail() {
         if (!docSnap.exists()) throw new Error("비디오를 찾을 수 없습니다.");
 
         const videoData = docSnap.data();
+        const userData = userDocSnap.exists() ? userDocSnap.data() : {}; // ✅ userDocSnap.data() 중복 호출 방지
+        const mode = userData.Mode === "public";
+
         setVideo(videoData);
         setEssay(videoData.essay || "");
         setIsPosted(videoData.isPosted || false);
-
-        const mode = userDocSnap.exists() && userDocSnap.data().Mode === "public";
         setIsOn(mode);
 
         // 만약 public 모드라면 
@@ -204,51 +245,27 @@ export default function VideoDetail() {
     } 
   };
 
-  // video 게시 & 게시 취소 관리 
+  // 🚗🌴 메인 영상의 게시 & 게시 취소를 관리하는 함수 
   const handleTogglePost = async () => {
-
     if (!video) return;
 
     try {
-        const userId = auth.currentUser?.uid;
-        if (!video || !userId) return;
+        const docRef = doc(db, "gallery", firstSlug);
 
-        // 현재 사용자가 저장한, 현재 페이지의 slug를 videoId로 가지는 video 정보 가져옴 
-        const userDocRef = doc(db, "gallery", firstSlug); // db 경로 설정 
-        const userDocSnap = await getDoc(userDocRef); // 해당 경로의 문서 불러옴 
+        await updateDoc(docRef, { isPosted: !isPosted }); // 반전만 시키면 됨 
 
-        if (!userDocSnap.exists()) {
-            console.error("❌ 사용자의 해당 비디오 데이터가 Firestore에 존재하지 않음");
-            return;
-        }
-
-        const currentIsPosted = userDocSnap.data().isPosted || false; 
-
-        // Firestore 트랜잭션을 사용하여 isPosted 상태를 반전시킴
-        await updateDoc(userDocRef, { isPosted: !currentIsPosted });
-        setIsPosted(!currentIsPosted);
-
+        setIsPosted((prevState) => !prevState); // isPosted 변수도 반전 
     } catch (error) {
         console.error("🔥 게시/게시 취소 중 오류 발생:", error);
     }
 };
 
-  // 에세이 저장 
+  // 🚗🌴 게시 전, 에세이를 저장하는 함수  
   const handleSaveEssay = async () => {
-
     if (!auth.currentUser) return;
 
     try {
-
-      // / 현재 사용자가 저장한, 현재 페이지의 slug를 videoId로 가지는 video 문서의 essay 필드 업데이트 
-      const userId = auth.currentUser?.uid;
       const docRef = doc(db, "gallery", firstSlug); // db 경로 설정 
-
-      const docSnap = await getDoc(docRef);
-      if (!docSnap.exists()) {
-          console.error("❌ 해당 문서가 Firestore에 존재하지 않습니다.");
-          return;
-      }
 
       await updateDoc(docRef, {
         essay: essay,
@@ -262,39 +279,8 @@ export default function VideoDetail() {
       console.error("에세이 저장 오류: ", error);
     }
   };
-  
-  // firestore의 gallery 컬렉션에서 recommend를 증가/감소 
-  const handleLike = async () => {
 
-    if (!video) return;
-    if (!auth.currentUser) return;
-
-    // db 경로를 설정 
-    const userId = auth.currentUser?.uid;
-    const docRef = doc(db, "gallery", firstSlug);
-    const userLikeRef = doc(db, "gallery", firstSlug, "likes", userId); // gallery 컬렉션의, 현재 페이지의 slug에 해당하는 video의, 현재 user의 like 여부를 참조하는 경로 
-
-    try {
-      const likeChange = liked ? -1 : 1;
-      await updateDoc(docRef, { recommend: increment(likeChange) });
-      
-      liked ? await deleteDoc(userLikeRef) : await setDoc(userLikeRef, { liked: true });
-    
-      setLiked(!liked);
-      setLikes((prevLikes) => prevLikes + likeChange);
-    } catch (error) {
-      console.error("좋아요 업데이트 실패:", error);
-    }
-  };
-
-  // 현재 user의 email에서, @ 앞부분만 반환 
-  function getEmailUsername(email) {
-    if (!email || typeof email !== "string") return "";
-    return email.split("@")[0];
-  }
-
-
-  // 🚨 답글 기능 🚨
+  // 🚗🌴 댓글을 작성하는 함수  
   const handlePostReply = async () => {
     if (!replyVideoUrl || !replyEssay) return;
   
@@ -346,10 +332,32 @@ export default function VideoDetail() {
       console.error("🔥 답글 저장 오류: ", error);
     }
   };
-  
-  
 
-  // Good! 
+  // 🚗🌴 메인 영상의 좋아요를 관리하는 함수 
+  const handleLike = async () => {
+    if (!video || !auth.currentUser) return;
+  
+    const userId = auth.currentUser?.uid;
+    const docRef = doc(db, "gallery", firstSlug);
+    const userLikeRef = doc(db, "gallery", firstSlug, "likes", userId); // gallery 컬렉션의, 현재 페이지의 slug에 해당하는 video의, 현재 user의 like 여부를 참조하는 경로 
+  
+    try {
+      const likeChange = liked ? -1 : 1;
+  
+      // ✅ Firestore 작업 병렬 실행
+      await Promise.all([
+        updateDoc(docRef, { recommend: increment(likeChange) }),
+        liked ? deleteDoc(userLikeRef) : setDoc(userLikeRef, { liked: true })
+      ]);
+      
+      setLiked((prevLiked) => !prevLiked);
+      setLikes((prevLikes) => prevLikes + likeChange);
+    } catch (error) {
+      console.error("좋아요 업데이트 실패:", error);
+    }
+  };
+
+  // 🚗🌴 댓글의 좋아요를 관리하는 함수 
   const handleReplyLike = async (commentId) => {
     if (!auth.currentUser) return;
   
@@ -388,68 +396,30 @@ export default function VideoDetail() {
     }
   };
   
-  
- // Good! 깔끔하다!! 
-  const getYoutubeVideoDetails = async (url) => {
-    try {
-      // YouTube URL에서 videoId 추출
-      const pattern = /(?:youtu\.be\/|youtube\.com\/.*[?&]v=|youtube\.com\/embed\/|youtube\.com\/v\/|youtube\.com\/shorts\/|youtube\.com\/user\/.*#p\/u\/\d\/|youtube\.com\/watch\?.*?v=)([a-zA-Z0-9_-]{11})/;
-      const match = url.match(pattern);
-  
-      if (!match || !match[1]) throw new Error("유효한 YouTube 링크가 아닙니다.");
-      const videoId = match[1];
-  
-      // YouTube API 호출 (영상 정보 가져오기)
-      const videoResponse = await fetch(
-        `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&id=${videoId}&key=${API_KEY}`
-      );
-      const videoData = await videoResponse.json();
-  
-      if (!videoData.items || videoData.items.length === 0)
-        throw new Error("비디오가 없습니다.");
-  
-      const videoInfo = videoData.items[0];
-      const { title, channelTitle, publishedAt, thumbnails, channelId } = videoInfo.snippet;
-      const { viewCount, likeCount } = videoInfo.statistics;
-  
-      // YouTube API 호출 (채널 정보 가져오기)
-      const channelResponse = await fetch(
-        `https://www.googleapis.com/youtube/v3/channels?part=snippet&id=${channelId}&key=${API_KEY}`
-      );
-      const channelData = await channelResponse.json();
-  
-      if (!channelData.items || channelData.items.length === 0)
-        throw new Error("채널 정보를 가져올 수 없습니다.");
-  
-      const channelProfile = channelData.items[0].snippet.thumbnails.default.url;
-  
-      // 🔥 불러온 영상 정보를 객체로 반환 (답글에도 사용 가능하도록)
-      return {
-        videoId,
-        name: title,
-        video: url,
-        thumbnail: thumbnails.high.url,
-        channel: channelTitle,
-        channelProfile,
-        views: viewCount,
-        likes: likeCount,
-        publishedAt: publishedAt.slice(0, 10),
-        createdAt: serverTimestamp(),
-        recommend: 0,
-      };
-    } catch (error) {
-      console.error("🔥 YouTube API 오류:", error);
-      return null;
-    }
-  };
+  // 🚗🌴 현재 user의 email에서, @ 앞부분만 반환하는 함수 
+  function getEmailUsername(email) {
+    if (!email || typeof email !== "string") return "";
+    return email.split("@")[0];
+  }
 
+  // 🚗🌴 전체 댓글을 정렬하는 함수 
   const sortedAllReplies = [...allReplies].sort((a, b) => {
       return Number(b.recommend) - Number(a.recommend); // isOn이 true이면 recommend를 기준으로 정렬, recommend가 많은 것(b)부터 정렬 
   });
-
+  // 🚗🌴 작성 중인 댓글 목록을 정렬하는 함수 
   const sortedMyReplies = [...myReplies].sort((a, b) => {
     return Number(b.createdAt) - Number(a.createdAt); // isOn이 true이면 recommend를 기준으로 정렬, recommend가 많은 것(b)부터 정렬 
 });
+
+  // 🚗🌴 youtube url을 입력 받아 videoID만 추출하는 함수
+  const getYouTubeVideoID = (url) => {
+
+    // 괄호 안의 정규식과, url을 match (형식을 맞춰 봄)
+    // 형식이 일치하면, match[1]을 사용해 \/ 사이의 값(videoID에 해당)만 반환
+    const pattern = /(?:youtu\.be\/|youtube\.com\/.*[?&]v=|youtube\.com\/embed\/|youtube\.com\/v\/|youtube\.com\/shorts\/|youtube\.com\/user\/.*#p\/u\/\d\/|youtube\.com\/watch\?.*?v=)([a-zA-Z0-9_-]{11})/;
+    const match = url.match(pattern);
+    return match ? match[1] : null;
+  };
   
 
   if (loading) return <p className="text-center mt-10">로딩 중...</p>;
