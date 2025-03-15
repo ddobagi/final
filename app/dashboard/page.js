@@ -88,16 +88,22 @@ export default function DashboardPage() {
 
   // 🚗🌴 대시보드 페이지에 표시할 영상의 데이터를 fetch해오는 함수
   const fetchVideoData = async (mode) => {
-    console.log("user");
-    if (!user) return;
-    const q = mode
-      ? query(collection(db, "gallery"), where("isPosted", "==", true))
-      : query(collection(db, "gallery"), where("userId", "==", auth.currentUser?.uid));
-  
-    return onSnapshot(q, (snapshot) => {
-      setVideos(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
-      console.log(videos);
-    });
+    if (!auth.currentUser) return;
+    try {
+      const userId = auth.currentUser.uid;
+      
+      const q = mode
+        ? query(collection(db, "gallery"), where("isPosted", "==", true))
+        : query(collection(db, "gallery"), where("userId", "==", userId));
+      
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        setVideos(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
+      });
+
+      return unsubscribe;
+    } catch (error) {
+      console.error("Firestore에서 비디오 데이터 가져오는 중 오류 발생:", error);
+    }
   };
 
   useEffect(() => {
