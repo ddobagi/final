@@ -77,31 +77,6 @@ export default function DashboardPage() {
     return () => unsubscribe();
   }, [router]);
 
-  // useEffect: 컴포넌트가 렌더링될 때 실행되는 react hook 
-  useEffect(() => {
-    // 로그인하지 않은 user는 이후 코드를 실행하지 않음 
-    if (!user) return;
-
-    // 현재 user의 고유 ID 
-    const userId = auth.currentUser?.uid;
-
-    // Firestore 쿼리 설정
-    let q;
-
-    if (isOn) {
-        // 🔥 isOn이 true → isPosted 필드가 true인 video만 가져오기
-        q = query(
-            collection(db, "gallery"), 
-            where("isPosted", "==", true), 
-        );
-    } else {
-        // 🔥 isOn이 false → currentUser.uid와 gallery/{firstSlug} 문서의 userId 값이 일치하고, isPosted 필드가 false인 video만 가져오기
-        q = query(
-            collection(db, "gallery"), 
-            where("userId", "==", userId),
-        );
-    }
-
     // 🚗🌴 대시보드 페이지에 표시할 영상의 데이터를 fetch해오는 함수
     const fetchVideoData = async (mode) => {
       if (!user) return;
@@ -113,17 +88,6 @@ export default function DashboardPage() {
         setVideos(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
       });
     };
-
-    // Firestore 실시간 감지
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-        setVideos(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
-    });
-
-    // 정리 함수: 컴포넌트가 unmount될 때 리스너 해제
-    return () => unsubscribe();
-
-// 의존성 배열에 user, isOn 포함 → user나 isOn 값이 변경될 때마다 실행
-}, [user, isOn]);
 
   useEffect(() => {
     function handleClickOutside(event) {
