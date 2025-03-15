@@ -297,22 +297,13 @@ export default function VideoDetail() {
     const userLikeRef = doc(db, "gallery", firstSlug, "likes", userId); // gallery 컬렉션의, 현재 페이지의 slug에 해당하는 video의, 현재 user의 like 여부를 참조하는 경로 
 
     try {
-      // 이미 좋아요를 눌렀다면 
-      if (liked) {
-        await updateDoc(docRef, { recommend: increment(-1) }); // recommend 1 감소 
-        await deleteDoc(userLikeRef); // 현재 user의 like 문서 삭제 
-
-        setLiked(false); // liked 상태 변수를 false로 변경 
-        setLikes((prevLikes) => prevLikes - 1); // likes 상태 변수의 값도 1 감소 
-
-      // 아직 좋아요를 누르지 않았다면 
-      } else {
-        await updateDoc(docRef, { recommend: increment(1) }); // recommend 1 증가 
-        await setDoc(userLikeRef, { liked: true }); // 현재 user의 like 문서를 추가하고, liked 필드를 true로 설정 
-
-        setLiked(true); // liked 상태 변수르 true로 변경 
-        setLikes((prevLikes) => prevLikes + 1); // likes 상태 변수의 값도 1 증가 
-      }
+      const likeChange = liked ? -1 : 1;
+      await updateDoc(docRef, { recommend: increment(likeChange) });
+      
+      liked ? await deleteDoc(userLikeRef) : await setDoc(userLikeRef, { liked: true });
+    
+      setLiked(!liked);
+      setLikes((prevLikes) => prevLikes + likeChange);
     } catch (error) {
       console.error("좋아요 업데이트 실패:", error);
     }
