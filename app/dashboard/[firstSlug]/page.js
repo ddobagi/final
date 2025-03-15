@@ -25,6 +25,9 @@ import { ThumbsUp, ArrowLeft, Heart } from "lucide-react";
 // 다른 곳에서 import 할 수 있는 함수형 컴포넌트를 정의 
 export default function VideoDetail() {
 
+  const previousPage = document.referrer.includes("/dashboard/likes") ? "/dashboard/likes" : "/dashboard";
+
+
   // URL에서 slug 가져오기
   const { firstSlug } = useParams(); 
 
@@ -44,14 +47,13 @@ export default function VideoDetail() {
   const [liked, setLiked] = useState(false);
   const [likes, setLikes] = useState(1);
   const [userEmail, setUserEmail] = useState("");
-  const [previousPage, setPreviousPage] = useState("/dashboard");
 
   // 🚨 답글 기능 🚨
 
   const [replying, setReplying] = useState(false); // 답글 입력 UI 활성화 여부
   const [replyVideoUrl, setReplyVideoUrl] = useState(""); // 답글 비디오 URL
   const [replyEssay, setReplyEssay] = useState(""); // 답글 에세이 내용
-  const [replies, setReplies] = useState([]); // 답글 목록
+  const [allReplies, setAllReplies] = useState([]); // 답글 목록
   const [myReplies, setMyReplies] = useState([]); // 답글 목록
 
   // vercel 환경 변수로 저장해둔 youtube api key
@@ -106,17 +108,6 @@ export default function VideoDetail() {
   // 의존성 배열에 slug와 router 포함 -> slug 값이 변경될 때마다 & router 값이 변경될 때마다 실행
   }, [firstSlug, router]);
 
-  // useEffect: 컴포넌트가 렌더링될 때 실행되는 react hook 
-  useEffect(() => {
-    // 이전 페이지의 url에 "/dashboard/likes"가 포함되면, 
-    // previousPage 상태변수의 값을 "/dashboard/likes"로 설정 
-    if (document.referrer.includes("/dashboard/likes")) {
-      setPreviousPage("/dashboard/likes");
-    }
-
-  // 의존성 배열이 비어있음 -> 컴포넌트가 최초 렌더링(마운트) 될 때 한 번만 실행되고, 이후 실행되지 않음
-  }, []);
-
   // url을 입력 받아 videoID만 추출하는 함수 (input: url)
   const getYouTubeVideoID = (url) => {
 
@@ -129,75 +120,51 @@ export default function VideoDetail() {
 
   // 🚨 답글 기능 🚨
   useEffect(() => {
-    if (isOn) {
-      const fetchReplies = async () => {
-        try {
-          const repliesRef = collection(db, "gallery", firstSlug, "comment");
+    if (!isOn) return;
+
+    const fetchReplies = async () => {
+      try {
+        const repliesRef = collection(db, "gallery", firstSlug, "comment");
           
-          // ✅ Firestore 쿼리 적용 (isPosted가 true인 것만 가져오기)
-          const q = query(repliesRef, where("isPosted", "==", true));
-  
-          // ✅ 쿼리 실행
-          const querySnapshot = await getDocs(q);
-  
-          const repliesList = querySnapshot.docs.map(doc => {
-            const data = doc.data();
-            return {
-              id: doc.id,
-              ...data,
-              likes: data.likes,
-              recommend: data.recommend
-            };
-          });
-  
-          setReplies(repliesList);
-        } catch (error) {
-          console.error("🔥 답글을 가져오는 중 오류 발생: ", error);
-        }
-      };
-  
-      fetchReplies();
-    }
-  }, [firstSlug, isOn]);
+        // ✅ Firestore 쿼리 적용 (isPosted가 true인 것만 가져오기)
+        const allRepliesQuery = query(repliesRef, where("isPosted", "==", true));
+        const myRepliesQuery = query(repliesRef, wher("isPosted", "==", false), where("user", "==", userEmail));
 
-  useEffect(() => {
-    if (isOn) {
-      const fetchMyReplies = async () => {
-        try {
+        // ✅ 쿼리 실행
+        const [allRepliesSnapshot, myRepliesSnapshot] = await Promise.all([
+          getDocs(allRepliesQuery),
+          getDocs(myRepliesQuery)
+        ]);
+  
+        const allRepliesList = allRepliesSnapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            ...data,
+            likes: data.likes,
+            recommend: data.recommend
+          };
+        });
 
-          const repliesRef = collection(db, "gallery", firstSlug, "comment");
-
-          const q = query(
-            repliesRef, 
-            where("isPosted", "==", false),
-            where("user", "==", userEmail)
-          );
+        const myRepliesList = myRepliesSnapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            ...data,
+            likes: data.likes,
+            recommend: data.recommend
+          };
+        });
   
-          // ✅ 쿼리 실행
-          const querySnapshot = await getDocs(q);
+        setAllReplies(allRepliesList);
+        setMyReplies(myRepliesList);
+      } catch (error) {
+        console.error("🔥 답글을 가져오는 중 오류 발생: ", error);
+      }
+    };
   
-          const repliesList = querySnapshot.docs.map(doc => {
-            const data = doc.data();
-            return {
-              id: doc.id,
-              ...data,
-              likes: data.likes,
-              recommend: data.recommend
-            };
-          });
-  
-          setMyReplies(repliesList);
-          console.log(myReplies);
-        } catch (error) {
-          console.error("🔥 답글을 가져오는 중 오류 발생: ", error);
-        }
-      };
-  
-      fetchMyReplies();
-    }
+    fetchReplies();
   }, [firstSlug, isOn, userEmail]);
-  
-  
 
   // 동적 라우팅 페이지에 표시할 video 데이터들을 fetch 해옴 
   const fetchVideoData = async (firstSlug, mode) => {
@@ -522,6 +489,22 @@ export default function VideoDetail() {
   if (loading) return <p className="text-center mt-10">로딩 중...</p>;
   if (error) return <p className="text-center mt-10 text-red-500">{error}</p>;
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  /// html ///
   return (
     <div className="flex flex-col items-center w-full p-6">
       <div className="w-full max-w-2xl flex justify-between">
