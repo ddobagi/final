@@ -24,7 +24,7 @@ import { ThumbsUp, ArrowLeft, Heart } from "lucide-react";
 // export default: 다른 곳에서 import 할 수 있게 함
 // 다른 곳에서 import 할 수 있는 함수형 컴포넌트를 정의 
 export default function VideoDetail() {
-  
+
   // URL에서 slug 가져오기
   const { firstSlug } = useParams(); 
 
@@ -422,6 +422,50 @@ export default function VideoDetail() {
     const match = url.match(pattern);
     return match ? match[1] : null;
   };
+
+  const ReplyCard = ({ reply, firstSlug, handleReplyLike, isOn }) => (
+    <Card key={reply.id} className="mt-3 w-full max-w-2xl">
+      <Link href={`/dashboard/${firstSlug}/${reply.id}`} passHref>
+        <div className="relative w-full aspect-video">
+          <iframe
+            className="w-full h-full rounded-t-lg"
+            src={`https://www.youtube.com/embed/${reply.videoId}`}
+            frameBorder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          ></iframe>
+        </div>
+      </Link>
+      <CardContent className="p-4">
+        <Link href={`/dashboard/${firstSlug}/${reply.id}`} passHref>
+          <h3 className="text-lg font-bold mb-2">{reply.name}</h3>
+          <div className="flex items-center justify-between w-full">
+            <div className="flex items-center">
+              <Image src={reply.channelProfile} alt="Channel Profile" width={40} height={40} className="rounded-full mr-3" />
+              <span className="text-lg font-semibold">{reply.channel}</span>
+            </div>
+            <div className="flex items-center">
+              <ThumbsUp className="w-5 h-5 text-gray-500 mr-1" />
+              <span className="text-gray-600">{reply.likes}</span>
+            </div>
+          </div>
+          <p className="text-sm text-gray-500 mt-2">
+            {reply.views} views · {new Date(reply.publishedAt).toLocaleDateString()}
+          </p>
+        </Link>
+  
+        {/* 🔥 답글 좋아요 버튼 (isOn이 true일 때만 표시) */}
+        {isOn && (
+          <div className="mt-4 flex items-center justify-between">
+            <button className="flex items-center p-2 rounded-lg transition" onClick={() => handleReplyLike(reply.id)}>
+              <Heart className="w-4 h-4 text-red-500 cursor-pointer" fill={reply.liked ? "currentColor" : "none"} />
+              <span className="ml-2 text-lg font-semibold cursor-pointer">{reply.recommend}</span>
+            </button>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
   
 
   if (loading) return <p className="text-center mt-10">로딩 중...</p>;
@@ -483,7 +527,6 @@ export default function VideoDetail() {
             <p className="text-sm text-gray-500 mt-2">{video.views} views · {new Date(video.publishedAt).toLocaleDateString()}</p>
             
             {/* Essay 입력 및 수정 */}
-
             <div className="mt-4">
               <div className = "flex items-center justify-between">
                 <h2 className="text-lg font-semibold font-nanum_pen">Essay</h2>
@@ -501,18 +544,8 @@ export default function VideoDetail() {
               </div>
 
               {/* 🔥 Essay 입력 또는 표시 */}
-              {!isOn ? (
-                isEditing ? (
-                  <textarea
-                    className="w-full p-2 border rounded mt-2 font-nanum_pen"
-                    value={essay}
-                    onChange={(e) => setEssay(e.target.value)}
-                  />
-                ) : (
-                  <p className="mt-2 p-2 border rounded bg-gray-100 font-nanum_pen">
-                    {essay || "작성된 내용이 없습니다."}
-                  </p>
-                )
+              {isOn || isEditing ? (
+                <textarea className="w-full p-2 border rounded mt-2 font-nanum_pen" value={essay} onChange={(e) => setEssay(e.target.value)} />
               ) : (
                 <p className="mt-2 p-2 border rounded bg-gray-100 font-nanum_pen">
                   {essay || "작성된 내용이 없습니다."}
@@ -522,11 +555,9 @@ export default function VideoDetail() {
               {/* 🔥 isOn이 false일 때만 버튼 표시 */}
               {!isOn && (
                 <div className="flex mt-2 space-x-2 font-pretendard justify-end">
-                  {isEditing ? (
-                    <Button onClick={handleSaveEssay}>저장</Button>
-                  ) : (
-                    <Button onClick={() => setIsEditing(true)}>수정</Button>
-                  )}
+                  <Button onClick={isEditing ? handleSaveEssay : () => setIsEditing(true)}>
+                    {isEditing ? "저장" : "수정"}
+                  </Button>
                   <Button onClick={handleTogglePost} className="bg-blue-500 text-white">
                     {isPosted ? "게시 취소" : "게시"}
                   </Button>
@@ -605,62 +636,12 @@ export default function VideoDetail() {
             </div>
           )}
 
+          {/* 전체 댓글 & 작성 중인 댓글 목록 렌더링 (재사용 가능) */}
+          {sortedMyReplies.length > 0 && <h3 className="text-lg font-semibold">작성 중인 댓글 목록</h3>}
+          {sortedMyReplies.map((reply) => <ReplyCard key={reply.id} reply={reply} firstSlug={firstSlug} handleReplyLike={handleReplyLike} isOn={isOn} />)}
 
-
-          {/* 🔥 기존 답글 리스트 표시 */}
-          {sortedAllReplies.length > 0 && (
-            <div className="mt-4">
-              <h3 className="text-lg font-semibold">전체 댓글 목록</h3>
-              {sortedAllReplies.map((reply) => (
-                <Card key={reply.id} className="mt-3 w-full max-w-2xl">
-                  <Link key={reply.id} href={`/dashboard/${firstSlug}/${reply.id}`} passHref>
-                    <div className="relative w-full aspect-video">
-                      <iframe
-                        className="w-full h-full rounded-t-lg"
-                        src={`https://www.youtube.com/embed/${reply.videoId}`}
-                        frameBorder="0"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                      ></iframe>
-                    </div>
-                  </Link>
-                  <CardContent className="p-4">
-                    <Link key={reply.id} href={`/dashboard/${firstSlug}/${reply.id}`} passHref>
-                      <h3 className="text-lg font-bold mb-2">{reply.name}</h3>
-                      <div className="flex items-center justify-between w-full">
-                        <div className="flex items-center">
-                          <Image src={reply.channelProfile} alt="Channel Profile" width={40} height={40} className="rounded-full mr-3" />
-                          <span className="text-lg font-semibold">{reply.channel}</span>
-                        </div>
-                        <div className="flex items-center">
-                          <ThumbsUp className="w-5 h-5 text-gray-500 mr-1" />
-                          <span className="text-gray-600">{reply.likes}</span>
-                        </div>
-                      </div>
-                      <p className="text-sm text-gray-500 mt-2">{reply.views} views · {new Date(reply.publishedAt).toLocaleDateString()}</p>
-                    </Link>
-                    {/* 🔥 답글 좋아요 버튼 */}
-                    <div className="mt-4">
-                      <div className="flex items-center justify-between">
-                        { isOn && (
-                            <button
-                            className="flex items-center p-2 rounded-lg transition"
-                            onClick={() => handleReplyLike(reply.id)}
-                          >
-                            <Heart
-                              className="w-4 h-4 text-red-500 cursor-pointer"
-                              fill={reply.liked ? "currentColor" : "none"}
-                            />
-                            <span className="ml-2 text-lg font-semibold cursor-pointer">{reply.recommend}</span>
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
+          {sortedAllReplies.length > 0 && <h3 className="text-lg font-semibold">전체 댓글 목록</h3>}
+          {sortedAllReplies.map((reply) => <ReplyCard key={reply.id} reply={reply} firstSlug={firstSlug} handleReplyLike={handleReplyLike} isOn={isOn} />)}
         </div>
       )}
     </div>
