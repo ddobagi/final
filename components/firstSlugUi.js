@@ -4,7 +4,27 @@ import { ThumbsUp, ArrowLeft, Heart } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
-export default function firstSlugUi({ loading, video, likes, isOn, replies, handleLike, router }) {
+export default function firstSlugUi({ 
+    loading, 
+    video, 
+    likes, 
+    isOn, 
+    replies, 
+    myReplies, 
+    userEmail, 
+    previousPage, 
+    handleLike, 
+    handlePostReply, 
+    handleReplyLike, 
+    router, 
+    essay, 
+    isEditing, 
+    setIsEditing, 
+    isPosted, 
+    handleTogglePost, 
+    handleSaveEssay, 
+    getYouTubeVideoID, 
+}) {
   if (loading) return <p>로딩 중...</p>;
 
   return (
