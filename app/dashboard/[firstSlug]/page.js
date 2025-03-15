@@ -197,7 +197,7 @@ export default function VideoDetail() {
           setLikes(videoData.recommend || 0);
           setLiked(userLikeSnap.exists());
         }
-        
+
     } catch (error) {
         console.error("Firestore에서 비디오 데이터 가져오는 중 오류 발생: ", error);
         setError(error.message);
@@ -338,7 +338,7 @@ export default function VideoDetail() {
       // 🔥 Firestore에서 isPosted가 true인 답글만 가져오기
       const q = query(repliesRef, where("isPosted", "==", true));
       const querySnapshot = await getDocs(q);  
-      setReplies(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      setAllReplies(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
 
       const x = query(repliesRef, where("isPosted", "==", false), where("user", "==", userEmail));
       const querySnapshot2 = await getDocs(x);  // ✅ 변수명을 querySnapshot으로 변경
@@ -365,8 +365,8 @@ export default function VideoDetail() {
     try {
       const likeSnap = await getDoc(userLikeRef); // 현재 사용자가 좋아요를 눌렀는지 확인
   
-      setReplies((prevReplies) =>
-        prevReplies.map((reply) =>
+      setAllReplies((prevAllReplies) =>
+        prevAllReplies.map((reply) =>
           reply.id === commentId
             ? {
                 ...reply,
@@ -446,7 +446,7 @@ export default function VideoDetail() {
     }
   };
 
-  const sortedReplies = [...replies].sort((a, b) => {
+  const sortedAllReplies = [...allReplies].sort((a, b) => {
       return Number(b.recommend) - Number(a.recommend); // isOn이 true이면 recommend를 기준으로 정렬, recommend가 많은 것(b)부터 정렬 
   });
 
@@ -639,10 +639,10 @@ export default function VideoDetail() {
 
 
           {/* 🔥 기존 답글 리스트 표시 */}
-          {sortedReplies.length > 0 && (
+          {sortedAllReplies.length > 0 && (
             <div className="mt-4">
               <h3 className="text-lg font-semibold">전체 댓글 목록</h3>
-              {sortedReplies.map((reply) => (
+              {sortedAllReplies.map((reply) => (
                 <Card key={reply.id} className="mt-3 w-full max-w-2xl">
                   <Link key={reply.id} href={`/dashboard/${firstSlug}/${reply.id}`} passHref>
                     <div className="relative w-full aspect-video">
