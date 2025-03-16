@@ -274,49 +274,42 @@ export default function DashboardPage() {
         <p className="text-gray-500 text-sm font-pretendard">{getEmailUsername(userEmail)} 님</p>
         <p onClick={() => signOut(auth)} className="cursor-pointer text-gray-500 text-sm font-pretendard underline">로그아웃</p>
       </div>
+
+      {/* 검색 및 대시보드 헤더 */}
       <div className="flex items-center justify-between max-w-[600px] w-full h-16 px-4 bg-transparent border border-gray-500 rounded text-white">
-        {/* 왼쪽 아이콘 */}
         {searchMode ? (
-          <button onClick={() => setSearchMode(false)} className="text-black cursor-pointor">
-            <ArrowLeft size={24} />
-          </button>
-        ) : (
-          <div className="w-10 h-10 rounded-full overflow-hidden bg-black flex items-center justify-center">
-            <Image src="/deep_logo.png" alt="Logo" width={40} height={40} className="object-contain" />
-          </div>
-        )}
-
-        {/* 검색 입력창 */}
-        {searchMode && (
-          <input
-            type="text"
-            className="flex-1 ml-4 px-2 py-1 text-black rounded bg-gray-100 cursor-pointer"
-            placeholder="Search..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        )}
-
-        <div className = "flex items-center space-x-6">
-          {/* 돋보기 버튼 */}
-          {!searchMode && (
-            <button onClick={() => setSearchMode(true)} className="text-black">
-              <Search size={24} />
+          <>
+            <button onClick={() => setSearchMode(false)} className="text-black">
+              <ArrowLeft size={24} />
             </button>
-          )}
-
-          {user && !searchMode && (
-            <Link href={"/dashboard/likes"} passHref><Heart size={24} className="cursor-pointer text-black" /></Link>
-          )}
-                  
-        </div>
+            <input
+              type="text"
+              className="flex-1 ml-4 px-2 py-1 text-black rounded bg-gray-100 cursor-pointer"
+              placeholder="Search..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </>
+        ) : (
+          <>
+            <div className="w-10 h-10 rounded-full overflow-hidden bg-black flex items-center justify-center">
+              <Image src="/deep_logo.png" alt="Logo" width={40} height={40} className="object-contain" />
+            </div>
+            <div className="flex items-center space-x-6">
+              <button onClick={() => setSearchMode(true)} className="text-black">
+                <Search size={24} />
+              </button>
+              {user && <Link href="/dashboard/likes" passHref><Heart size={24} className="cursor-pointer text-black" /></Link>}
+            </div>
+          </>
+        )}
       </div>
 
+      {/* 공개/비공개 모드 토글 */}
       <div className="flex items-center max-w-[600px] w-full h-10 space-x-2 justify-end">
-        <Switch checked={isOn} onCheckedChange={(checked) => handleToggleMode(checked)} />
+        <Switch checked={isOn} onCheckedChange={handleToggleMode} />
         <span>{isOn ? "Public" : "Private"}</span>
       </div>
-
 
       { !isOn && (
         <div className="z-10 fixed bottom-6 right-6 flex flex-col items-end" ref={fabRef}>
@@ -371,7 +364,6 @@ export default function DashboardPage() {
                   <div className="flex items-center space-x-3">
                     {/* 채널 프로필 이미지 */}
                     <Image src={video.channelProfile} alt={video.channel} width={40} height={40} className="rounded-full object-cover" />
-                    
 
                     {/* 영상 제목 및 채널 정보 */}
                     <div className="flex flex-col flex-1">
@@ -386,6 +378,7 @@ export default function DashboardPage() {
                   </div>
                 </Link>
               </CardContent>
+
               {!isOn && (
                 <button
                   onClick={async () => {
@@ -394,18 +387,12 @@ export default function DashboardPage() {
 
                     try {
                       const batch = writeBatch(db);
+                      const galleryQuerySnapshot = await getDocs(
+                        query(collection(db, "gallery"), where("video", "==", video.video))
+                      );
 
-                      // gallery에서 video.video와 일치하는 문서 찾기
-                      const galleryRef = collection(db, "gallery");
-                      const galleryQuery = query(galleryRef, where("video", "==", video.video));
-                      const galleryQuerySnapshot = await getDocs(galleryQuery);
-
-                      galleryQuerySnapshot.forEach((doc) => {
-                        batch.delete(doc.ref); // 🔥 gallery 문서 삭제
-                      });
-
-                      // 🔥 모든 삭제 작업 실행
-                      await batch.commit();
+                      galleryQuerySnapshot.forEach((doc) => batch.delete(doc.ref)); // 🔥 gallery 문서 삭제
+                      await batch.commit(); // 🔥 모든 삭제 작업 실행
 
                       alert("비디오가 삭제되었습니다.");
                       router.push("/dashboard");
