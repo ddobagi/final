@@ -115,7 +115,7 @@ export default function FirstSlugPage() {
   useEffect(() => {
     if (!isOn) return;
 
-    const fetchReplies = async () => {
+    const fetchReplies = async (commentId) => {
       try {
         const repliesRef = collection(db, "gallery", firstSlug, "comment");
           
@@ -167,7 +167,7 @@ export default function FirstSlugPage() {
 
 
 
-        
+
       } catch (error) {
         console.error("🔥 답글을 가져오는 중 오류 발생: ", error);
       }
