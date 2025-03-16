@@ -309,6 +309,7 @@ export default function FirstSlugPage() {
         user: userEmail,
         recommend: 0,
         isPosted: false,
+        liked: false,
       });
   
       // 상태 업데이트 (입력 필드 초기화)
