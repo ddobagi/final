@@ -32,18 +32,24 @@ export default function SecondSlugPage() {
 
   // useState() : react에서 상태를 관리하는 hook 
   // state 정보와 setter 함수가 배열[]로 정의됨 
+
+  // user info 
   const [user, setUser] = useState(null);
-  const [video, setVideo] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [essay, setEssay] = useState("");
-  const [isEditing, setIsEditing] = useState(false);
-  const [isPosted, setIsPosted] = useState(false);
+  const [userEmail, setUserEmail] = useState("");
   const [isOn, setIsOn] = useState(true);
+
+  // video info 
+  const [video, setVideo] = useState(null);
   const [liked, setLiked] = useState(false);
   const [likes, setLikes] = useState(1);
-  const [userEmail, setUserEmail] = useState("");
-  const [previousPage, setPreviousPage] = useState("/dashboard");
+  const [isPosted, setIsPosted] = useState(false);
+
+  // essay info 
+  const [essay, setEssay] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
+
+  // error info 
+  const [error, setError] = useState(null);
 
   // vercel 환경 변수로 저장해둔 youtube api key
   // 반드시 "NEXT_PUBLIC_~"가 붙어야 함 
@@ -51,7 +57,6 @@ export default function SecondSlugPage() {
 
   // useEffect: 컴포넌트가 렌더링될 때 실행되는 react hook 
   useEffect(() => {
-
     // onAuthStateChanged(auth, callback): 사용자의 로그인 상태 변경을 감지하는 firebase authentication의 이벤트 리스너 
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
 
@@ -59,7 +64,6 @@ export default function SecondSlugPage() {
         if (currentUser) {
             setUser(currentUser);
             setUserEmail(currentUser.email);
-            setLoading(true);
             console.log(firstSlug, secondSlug);
             setIsOn(true);
 
@@ -81,84 +85,42 @@ export default function SecondSlugPage() {
         } else {
             console.log("❌ 로그인되지 않음");
             router.push("/");
-            setLoading(false);
             setUserEmail("");
             return;
         }
     });
 
-    // 간단히 표현하면
-    // useEffect (() => {
-    // const unsubcribe = onAuthStateChanged(auth, callback);
-    // return () => unsubscribe();
-    // }, []); 
     // '컴포넌트가 rendering 되면, 정의한 unsubscribe 함수를 return하세요'인 것 + 이벤트 리스너 해제 
     return () => unsubscribe();
   
   // 의존성 배열에 slug와 router 포함 -> slug 값이 변경될 때마다 & router 값이 변경될 때마다 실행
   }, [firstSlug, secondSlug, router, isPosted]);
 
-  // url을 입력 받아 videoID만 추출하는 함수 (input: url)
-  const getYouTubeVideoID = (url) => {
-
-    // 괄호 안의 정규식과, url을 match (형식을 맞춰 봄)
-    // 형식이 일치하면, match[1]을 사용해 \/ 사이의 값(videoID에 해당)만 반환
-    const pattern = /(?:youtu\.be\/|youtube\.com\/.*[?&]v=|youtube\.com\/embed\/|youtube\.com\/v\/|youtube\.com\/shorts\/|youtube\.com\/user\/.*#p\/u\/\d\/|youtube\.com\/watch\?.*?v=)([a-zA-Z0-9_-]{11})/;
-    const match = url.match(pattern);
-    return match ? match[1] : null;
-  };  
-
-  // 동적 라우팅 페이지에 표시할 video 데이터들을 fetch 해옴 
-  const fetchVideoData = async (firstSlug, secondSlug) => {
-
+  // 🚗🌴 secondSlugPage에 표시할 표시할 댓글 영상의 데이터를 fetch해오는 함수 
+  const fetchVideoData = async () => {
     if (!auth.currentUser) return;
 
     try {
-        // 일단 로딩 걸어 둠 
-        setLoading(true);
+        const userId = auth.currentUser.uid;
 
-        // db 경로에서 문서를 불러옴 
-        const q = query(
-          collection(db, "gallery", firstSlug, "comment"),
-          where("__name__", "==", secondSlug) // 특정 문서만 가져오기 위해 ID 필터 추가
-        );
-        console.log("1번 오류");
+        const [videoSnap, userLikeSnap] = await Promise.all([
+          getDoc(doc(db, "gallery", firstSlug, "comment", secondSlug)),
+          getDoc(doc(db, "gallery", firstSlug, "comment", secondSlug, "likes", userId)
+        )]);
 
-        const querySnapshot = await getDocs(q);
+        if (!videoSnap.exists()) throw new Error("❌ 해당 비디오를 찾을 수 없습니다.");
 
-        // 불러온 문서에서 전체 data와 essay, isPosted 데이터를 가져와
-        // video, essay, isPosted 상태 변수에 저장 
-        if (!querySnapshot.empty) {
-            const docSnap = querySnapshot.docs[0];
-            const videoData = docSnap.data();
-            setVideo(videoData);
-            setEssay(videoData.essay || "");
-            setLikes(videoData.recommend || 0);
-            console.log("2번 오류");
-            console.log(videoData);
-
-            // userLikeSnap과 userDocSnap에 private 모드와 public 모드의 db 경로를 각각 저장 
-            const userId = auth.currentUser.uid;
-            const userLikeSnap = await getDoc(doc(db, "gallery", firstSlug, "comment", secondSlug, "likes", userId));
-
-            // 만약 현재 페이지의 영상에 대한, 현재 user의 likes 필드가 존재한다면 liked 상태 변수를 true로 설정 
-            setLiked(userLikeSnap.exists());
-        } else {
-            throw new Error("해당 비디오를 찾을 수 없습니다.");
-        }
+        const videoData = videoSnap.data();
+        setVideo(videoData);
+        setEssay(videoData.essay || "");
+        setIsPosted(videoData.isPosted || false);
+        setLikes(videoData.recommend || 0);
+        setLiked(userLikeSnap.exists());
     } catch (error) {
         console.error("fetchVideoDeta 함수 에러: ", error);
         setError(error.message);
-    } finally {
-        // 필요한 데이터를 모두 가져온 후 로딩 해제 
-        setLoading(false);
     }
   };
-
-
-
-
-  
 
   // 에세이 저장 
   const handleSaveEssay = async () => {
@@ -194,40 +156,57 @@ export default function SecondSlugPage() {
     }
   };
   
-  // firestore의 gallery 컬렉션에서 recommend를 증가/감소 
-  const handleLike = async () => {
 
-    if (!video) return;
-    if (!auth.currentUser) return;
-
-    // db 경로를 설정 
-    const userId = auth.currentUser?.uid;
-    const docRef = doc(db, "gallery", firstSlug, "comment", secondSlug);
-    const userLikeRef = doc(db, "gallery", firstSlug, "comment", secondSlug, "likes", userId); // gallery 컬렉션의, 현재 페이지의 slug에 해당하는 video의, 현재 user의 like 여부를 참조하는 경로 
+  // 🚗🌴 댓글 영상의 게시 & 게시 취소를 관리하는 함수  
+  const handleTogglePost = async () => {
+    if (!video || !auth.currentUser) return;
 
     try {
-      // 이미 좋아요를 눌렀다면 
-      if (liked) {
-        await updateDoc(docRef, { recommend: increment(-1) }); // recommend 1 감소 
-        await deleteDoc(userLikeRef); // 현재 user의 like 문서 삭제 
+        // 현재 사용자가 저장한, 현재 페이지의 slug를 videoId로 가지는 video 정보 가져옴 
+        const userDocRef = doc(db, "gallery", firstSlug, "comment", secondSlug); // db 경로 설정 
 
-        setLiked(false); // liked 상태 변수를 false로 변경 
-        setLikes((prevLikes) => prevLikes - 1); // likes 상태 변수의 값도 1 감소 
-
-      // 아직 좋아요를 누르지 않았다면 
-      } else {
-        await updateDoc(docRef, { recommend: increment(1) }); // recommend 1 증가 
-        await setDoc(userLikeRef, { liked: true }); // 현재 user의 like 문서를 추가하고, liked 필드를 true로 설정 
-
-        setLiked(true); // liked 상태 변수르 true로 변경 
-        setLikes((prevLikes) => prevLikes + 1); // likes 상태 변수의 값도 1 증가 
-      }
+        await updateDoc(userDocRef, { isPosted: !isPosted });  // firestore 업데이트
+        
+        setIsPosted((prev) => !prev); // isPosted 변수 업데이트 
     } catch (error) {
-      console.error("handleLike 함수 에러:", error);
+        console.error("🔥 게시/게시 취소 중 오류 발생:", error);
     }
   };
 
-  // 현재 user의 email에서, @ 앞부분만 반환 
+  // 🚗🌴 댓글 영상의 좋아요를 관리하는 함수
+  const handleLike = async () => {
+    if (!video || !auth.currentUser) return;
+
+    const userId = auth.currentUser?.uid;
+    const docRef = doc(db, "gallery", firstSlug, "comment", secondSlug);
+    const userLikeRef = doc(db, "gallery", firstSlug, "comment", secondSlug, "likes", userId);
+
+    try {
+      const likeChange = liked ? -1 : 1;
+  
+      // Firestore 쿼리 병렬 실행
+      await Promise.all([
+        updateDoc(docRef, { recommend: increment(likeChange) }),
+        liked ? deleteDoc(userLikeRef) : setDoc(userLikeRef, { liked: true })
+      ]);
+  
+      // 상태 변수 업데이트
+      setLiked((prevLiked) => !prevLiked);
+      setLikes((prevLikes) => prevLikes + likeChange);
+  
+    } catch (error) {
+      console.error("🔥 좋아요 업데이트 실패:", error);
+    }
+  };
+
+  // 🚗🌴 youtube url을 입력 받아 videoID만 추출하는 함수
+  const getYouTubeVideoID = (url) => {
+    const pattern = /(?:youtu\.be\/|youtube\.com\/.*[?&]v=|youtube\.com\/embed\/|youtube\.com\/v\/|youtube\.com\/shorts\/|youtube\.com\/user\/.*#p\/u\/\d\/|youtube\.com\/watch\?.*?v=)([a-zA-Z0-9_-]{11})/;
+    const match = url.match(pattern);
+    return match ? match[1] : null;
+  };  
+
+  // 🚗🌴 현재 user의 email에서, @ 앞부분만 반환하는 함수 
   function getEmailUsername(email) {
     if (!email || typeof email !== "string") return "";
     return email.split("@")[0];
@@ -235,59 +214,11 @@ export default function SecondSlugPage() {
 
 
 
-// video 게시 & 게시 취소 관리 
-const handleTogglePost = async () => {
-
-  if (!video) return;
-
-  try {
-      const userId = auth.currentUser?.uid;
-      if (!video || !auth.currentUser) return;
-
-      // 현재 사용자가 저장한, 현재 페이지의 slug를 videoId로 가지는 video 정보 가져옴 
-      const userDocRef = doc(db, "gallery", firstSlug, "comment", secondSlug); // db 경로 설정 
-      const userDocSnap = await getDoc(userDocRef); // 해당 경로의 문서 불러옴 
-
-      if (!userDocSnap.exists()) {
-          console.error("❌ 사용자의 해당 비디오 데이터가 Firestore에 존재하지 않음");
-          return;
-      }
-
-      // 이미 게시된 video라면 
-      if (isPosted) {
-          // firestore db의 gallery 컬렉션에서, video 필드의 값이 video.video와 일치하는 것(즉 동일한 url을 가지는 것)만 query하도록
-          const q = query(collection(db, "gallery", firstSlug, "comment"), where("video", "==", video.video)); // db 경로 설정
-          const querySnapshot = await getDocs(q); // 해당 경로의 문서 가져옴 
-
-          if (querySnapshot.empty) {
-              console.warn("⚠️ gallery에 해당 비디오가 없음");
-          }
-
-          // 현재 사용자가 저장한, 현재 페이지의 slug를 videoId로 가지는 video 문서의
-          // isPosted 필드 값을 false로 업데이트, isPosted 상태 변수 값도 false로 설정 
-          await updateDoc(userDocRef, { isPosted: false });
-          setIsPosted(false);
-        
-      // 아직 게시되지 않은 video라면 
-      } else {
-          // 현재 사용자가 저장한, 현재 페이지의 slug를 videoId로 가지는 video 문서의 isPosted 값도 true로 변경, isPosted 상태 변수 값도 true로 변경 
-          await updateDoc(userDocRef, { isPosted: true });
-          setIsPosted(true);
-      }
-  } catch (error) {
-      console.error("🔥 게시/게시 취소 중 오류 발생:", error);
-  }
-};
 
 
 
 
 
-
-
-
-
-  if (loading) return <p className="text-center mt-10">로딩 중...</p>;
   if (error) return <p className="text-center mt-10 text-red-500">{error}</p>;
 
   return (
