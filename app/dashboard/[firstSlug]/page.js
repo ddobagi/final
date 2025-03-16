@@ -365,32 +365,23 @@ export default function FirstSlugPage() {
     const userId = auth.currentUser?.uid;
     const replyRef = doc(db, "gallery", firstSlug, "comment", commentId);
     const userLikeRef = doc(db, "gallery", firstSlug, "comment", commentId, "likes", userId);
-  
-    try {  
-      const replyDoc = await getDoc(replyRef);
-      const replyData = { id: replyDoc.id, ...replyDoc.data() };
+    const userLikeDoc = await getDoc(userLikeRef);
+    const userLikeData = { id: userLikeDoc.id, ...userLikeDoc.data() };
 
-      const likeChange = replyData.liked ? -1 : 1;
+    setReplyLiked(userLikeData.liked);
+    setReplyLikes(replyRef.likes);
+  
+    try {
+      const likeChange = replyLiked ? -1 : 1;
 
       await Promise.all([
         updateDoc(replyRef, { recommend: increment(likeChange) }),
-        replyData.liked ? deleteDoc(userLikeRef) : setDoc(userLikeRef, { liked: true })
+        replyLiked ? deleteDoc(userLikeRef) : setDoc(userLikeRef, { liked: true })
       ]);
       
-      // UI를 변경 
-      // prevAllReplies: Firestore에서 가져온, 기존 allReplies '배열'
-      // reply: prevAllReplies 배열의 각 요소를 받는 변수. .map()을 사용하면, 배열의 각 요소를 자동으로 받음 
-      setAllReplies((prevAllReplies) =>
-        prevAllReplies.map((reply) =>
-          reply.id === commentId // reply.id === commentId면 liked와 recommend 필드 값 변경  
-            ? {
-                ...reply,
-                liked: !reply.liked, // 좋아요 상태 변경
-                recommend: reply.recommend + likeChange,
-              }
-            : reply // reply.id !== commentId면 기존 값 그대로 반환 
-        )
-      );
+      // 상태 변수 업데이트
+      setReplyLiked((prevReplyLiked) => !prevReplyLiked);
+      setReplyLikes((prevReplyLikes) => prevReplyLikes + likeChange);
     } catch (error) {
       console.error("🔥 답글 좋아요 업데이트 실패:", error);
     }
