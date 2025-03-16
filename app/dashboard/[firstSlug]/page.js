@@ -366,11 +366,10 @@ export default function FirstSlugPage() {
   
     try {  
       const replyDoc = await getDoc(replyRef);
-
       const replyData = { id: replyDoc.id, ...replyDoc.data() };
 
       const likeChange = replyData.liked ? -1 : 1;
-  
+
       await Promise.all([
         updateDoc(replyRef, { recommend: increment(likeChange) }),
         replyData.liked ? deleteDoc(userLikeRef) : setDoc(userLikeRef, { liked: true })
