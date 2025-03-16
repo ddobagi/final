@@ -369,6 +369,7 @@ export default function FirstSlugPage() {
   
     try {  
       const targetReply = allReplies.find((reply) => reply.id === commentId);
+      console.log(allReplies);
 
       if (!targetReply) {
         console.error("🔥 해당하는 댓글을 찾을 수 없습니다. commentId: ", commentId);
