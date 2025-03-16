@@ -131,7 +131,7 @@ export default function FirstSlugPage() {
           getDocs(myRepliesQuery)
         ]);
   
-        const allRepliesList = allRepliesSnapshot.docs.map(doc => {
+        const allRepliesList = allRepliesSnapshot.docs.map( async(doc) => {
           const data = doc.data();
           const repliesLikeRef = docRef(db, "gallery", firstSlug, "comment", doc.id, "likes", userId);
           const repliesLikeDoc = await getDoc(repliesLikeRef);
