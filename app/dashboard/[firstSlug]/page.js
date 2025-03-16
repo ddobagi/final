@@ -515,7 +515,7 @@ export default function FirstSlugPage() {
                 <h2 className="text-lg font-semibold font-nanum_pen">Essay</h2>
 
                 {/* 🔥 isOn이 true일 때 좋아요 버튼 표시 */}
-                {isOn && (
+                {isOn && isPosted && (
                   <button
                     className="flex items-center p-2 rounded-lg transition"
                     onClick={handleLike}
