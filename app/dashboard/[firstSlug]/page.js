@@ -151,6 +151,23 @@ export default function FirstSlugPage() {
   
         setAllReplies(allRepliesList);
         setMyReplies(myRepliesList);
+
+
+
+        const userId = auth.currentUser?.uid;
+        const replyRef = doc(db, "gallery", firstSlug, "comment", commentId);
+        const userLikeRef = doc(db, "gallery", firstSlug, "comment", commentId, "likes", userId);
+        const userLikeDoc = await getDoc(userLikeRef);
+        const userLikeData = { id: userLikeDoc.id, ...userLikeDoc.data() };
+        const replyDoc = await getDoc(replyRef);
+        const replyData = { id: replyDoc.id, ...replyDoc.data() };
+    
+        setReplyLiked(userLikeData.liked);
+        setReplyLikes(replyData.likes);
+
+
+
+        
       } catch (error) {
         console.error("🔥 답글을 가져오는 중 오류 발생: ", error);
       }
@@ -362,16 +379,7 @@ export default function FirstSlugPage() {
   const handleReplyLike = async (commentId) => {
     if (!auth.currentUser) return;
 
-    const userId = auth.currentUser?.uid;
-    const replyRef = doc(db, "gallery", firstSlug, "comment", commentId);
-    const userLikeRef = doc(db, "gallery", firstSlug, "comment", commentId, "likes", userId);
-    const userLikeDoc = await getDoc(userLikeRef);
-    const userLikeData = { id: userLikeDoc.id, ...userLikeDoc.data() };
-    const replyDoc = await getDoc(replyRef);
-    const replyData = { id: replyDoc.id, ...replyDoc.data() };
 
-    setReplyLiked(userLikeData.liked);
-    setReplyLikes(replyData.likes);
   
     try {
       const likeChange = replyLiked ? -1 : 1;
