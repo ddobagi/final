@@ -59,6 +59,8 @@ export default function FirstSlugPage() {
   const [replyEssay, setReplyEssay] = useState(""); // 답글 에세이 내용
   const [allReplies, setAllReplies] = useState([]); // 전체 댓글 목록
   const [myReplies, setMyReplies] = useState([]); // 작성 중인 댓글 목록
+  const [replyLiked, setReplyLiked] = useState(false);
+  const [replyLikes, setReplyLikes] = useState(1);
 
   // vercel 환경 변수로 저장해둔 youtube api key
   // 반드시 "NEXT_PUBLIC_~"가 붙어야 함 
@@ -356,38 +358,39 @@ export default function FirstSlugPage() {
     }
   };
 
+  // 🚗🌴 댓글의 좋아요를 관리하는 함수 
   const handleReplyLike = async (commentId) => {
     if (!auth.currentUser) return;
-  
-    // Firestore 경로 설정
+
     const userId = auth.currentUser?.uid;
     const replyRef = doc(db, "gallery", firstSlug, "comment", commentId);
     const userLikeRef = doc(db, "gallery", firstSlug, "comment", commentId, "likes", userId);
   
-    try {
-      const likeSnap = await getDoc(userLikeRef); // 현재 사용자가 좋아요를 눌렀는지 확인
-  
+    try {  
+      const replyDoc = await getDoc(replyRef);
+      const replyData = { id: replyDoc.id, ...replyDoc.data() };
+
+      const likeChange = replyData.liked ? -1 : 1;
+
+      await Promise.all([
+        updateDoc(replyRef, { recommend: increment(likeChange) }),
+        replyData.liked ? deleteDoc(userLikeRef) : setDoc(userLikeRef, { liked: true })
+      ]);
+      
+      // UI를 변경 
+      // prevAllReplies: Firestore에서 가져온, 기존 allReplies '배열'
+      // reply: prevAllReplies 배열의 각 요소를 받는 변수. .map()을 사용하면, 배열의 각 요소를 자동으로 받음 
       setAllReplies((prevAllReplies) =>
         prevAllReplies.map((reply) =>
-          reply.id === commentId
+          reply.id === commentId // reply.id === commentId면 liked와 recommend 필드 값 변경  
             ? {
                 ...reply,
-                liked: !likeSnap.exists(), // 좋아요 상태 변경
-                recommend: reply.recommend + (likeSnap.exists() ? -1 : 1), // recommend 업데이트
+                liked: !reply.liked, // 좋아요 상태 변경
+                recommend: reply.recommend + likeChange,
               }
-            : reply
+            : reply // reply.id !== commentId면 기존 값 그대로 반환 
         )
       );
-  
-      if (likeSnap.exists()) {
-        // 🔥 이미 좋아요를 눌렀다면 취소
-        await updateDoc(replyRef, { recommend: increment(-1) }); // Firestore에서 recommend 1 감소
-        await deleteDoc(userLikeRef); // 현재 유저의 like 문서 삭제
-      } else {
-        // 🔥 좋아요 추가
-        await updateDoc(replyRef, { recommend: increment(1) }); // Firestore에서 recommend 1 증가
-        await setDoc(userLikeRef, { liked: true }); // 현재 유저의 like 문서 추가
-      }
     } catch (error) {
       console.error("🔥 답글 좋아요 업데이트 실패:", error);
     }
