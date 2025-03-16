@@ -131,20 +131,22 @@ export default function FirstSlugPage() {
           getDocs(myRepliesQuery)
         ]);
   
-        const allRepliesList = allRepliesSnapshot.docs.map( async(doc) => {
-          const data = doc.data();
-          const repliesLikeRef = doc(db, "gallery", firstSlug, "comment", doc.id, "likes", userId);
-          const repliesLikeDoc = await getDoc(repliesLikeRef);
-          const isLiked = repliesLikeDoc.exists(); // `likes` 서브컬렉션에 문서가 있으면 `true`, 없으면 `false`
+        const allRepliesList = await Promise.all(
+          allRepliesSnapshot.docs.map(async (doc) => {
+            const data = doc.data();
+            const repliesLikeRef = doc(db, "gallery", firstSlug, "comment", doc.id, "likes", userId);
+            const repliesLikeDoc = await getDoc(repliesLikeRef);
+            const isLiked = repliesLikeDoc.exists(); // 🔥 Firestore에서 좋아요 상태 확인
           
-          return {
-            id: doc.id,
-            ...data,
-            likes: data.likes,
-            recommend: data.recommend,
-            liked: isLiked,
-          };
-        });
+            return {
+              id: doc.id,
+              ...data,
+              likes: data.likes,
+              recommend: data.recommend,
+              liked: isLiked,
+            };
+          })
+        );
 
         const myRepliesList = myRepliesSnapshot.docs.map(doc => {
           const data = doc.data();
