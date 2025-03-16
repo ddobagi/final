@@ -365,6 +365,15 @@ export default function FirstSlugPage() {
     const userLikeRef = doc(db, "gallery", firstSlug, "comment", commentId, "likes", userId);
   
     try {  
+      const targetReply = allReplies.find((reply) => reply.id === commentId);
+
+      if (!targetReply) {
+        console.error("🔥 해당하는 댓글을 찾을 수 없습니다.");
+        return;
+      }
+
+      const likeChange = targetReply.liked ? -1 : 1;
+
       // UI를 변경 
       // prevAllReplies: Firestore에서 가져온, 기존 allReplies '배열'
       // reply: prevAllReplies 배열의 각 요소를 받는 변수. .map()을 사용하면, 배열의 각 요소를 자동으로 받음 
@@ -374,20 +383,16 @@ export default function FirstSlugPage() {
             ? {
                 ...reply,
                 liked: !reply.liked, // 좋아요 상태 변경
-                recommend: reply.liked ? reply.recommend - 1 : reply.recommend + 1, // 좋아요 수 업데이트
+                recommend: reply.recommend + likeChange,
               }
             : reply // reply.id !== commentId면 기존 값 그대로 반환 
         )
       );
   
-      // db를 변경  
-      const actions = reply.liked
-        // 좋아요를 이미 눌렀다면 
-        ? [updateDoc(replyRef, { recommend: increment(-1) }), deleteDoc(userLikeRef)] // 좋아요 취소
-        // 좋아요를 누르지 않았다면 
-        : [updateDoc(replyRef, { recommend: increment(1) }), setDoc(userLikeRef, { liked: true })]; // 좋아요 추가
-
-        await Promise.all(actions);
+      await Promise.all([
+        updateDoc(replyRef, { recommend: increment(likeChange) }),
+        targetReply.liked ? deleteDoc(userLikeRef) : setDoc(userLikeRef, { liked: true })
+      ]);
 
     } catch (error) {
       console.error("🔥 답글 좋아요 업데이트 실패:", error);
