@@ -117,7 +117,13 @@ export default function FirstSlugPage() {
 
     const fetchReplies = async () => {
       try {
+        const userId = auth.currentUser.uid;
+
         const repliesRef = collection(db, "gallery", firstSlug, "comment");
+        const repliesLikeRef = doc(db, "gallery", firstSlug, "comment", reply.id, "likes", userId);
+
+        const repliesLikeDoc = getDoc(doc(repliesLikeRef))
+        const repliesLikeData = repliesLikeDoc.data();
           
         // ✅ Firestore 쿼리 적용 (isPosted가 true인 것만 가져오기)
         const allRepliesQuery = query(repliesRef, where("isPosted", "==", true));
@@ -135,7 +141,8 @@ export default function FirstSlugPage() {
             id: doc.id,
             ...data,
             likes: data.likes,
-            recommend: data.recommend
+            recommend: data.recommend,
+            liked: repliesLikeData.liked,
           };
         });
 
