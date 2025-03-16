@@ -133,7 +133,7 @@ export default function FirstSlugPage() {
   
         const allRepliesList = allRepliesSnapshot.docs.map( async(doc) => {
           const data = doc.data();
-          const repliesLikeRef = docRef(db, "gallery", firstSlug, "comment", doc.id, "likes", userId);
+          const repliesLikeRef = doc(db, "gallery", firstSlug, "comment", doc.id, "likes", userId);
           const repliesLikeDoc = await getDoc(repliesLikeRef);
           const isLiked = repliesLikeDoc.exists(); // `likes` 서브컬렉션에 문서가 있으면 `true`, 없으면 `false`
           
