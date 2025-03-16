@@ -120,10 +120,6 @@ export default function FirstSlugPage() {
         const userId = auth.currentUser.uid;
 
         const repliesRef = collection(db, "gallery", firstSlug, "comment");
-        const repliesLikeRef = doc(db, "gallery", firstSlug, "comment", reply.id, "likes", userId);
-
-        const repliesLikeDoc = getDoc(doc(repliesLikeRef))
-        const repliesLikeData = repliesLikeDoc.data();
           
         // ✅ Firestore 쿼리 적용 (isPosted가 true인 것만 가져오기)
         const allRepliesQuery = query(repliesRef, where("isPosted", "==", true));
@@ -137,12 +133,16 @@ export default function FirstSlugPage() {
   
         const allRepliesList = allRepliesSnapshot.docs.map(doc => {
           const data = doc.data();
+          const repliesLikeRef = docRef(db, "gallery", firstSlug, "comment", doc.id, "likes", userId);
+          const repliesLikeDoc = await getDoc(repliesLikeRef);
+          const isLiked = repliesLikeDoc.exists(); // `likes` 서브컬렉션에 문서가 있으면 `true`, 없으면 `false`
+          
           return {
             id: doc.id,
             ...data,
             likes: data.likes,
             recommend: data.recommend,
-            liked: repliesLikeData.liked,
+            liked: isLiked,
           };
         });
 
