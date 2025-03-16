@@ -420,7 +420,7 @@ export default function FirstSlugPage() {
   };
 
   // 🚗🌴 댓글 카드 ui 정의
-  const ReplyCard = ({ reply, firstSlug, handleReplyLike, isOn }) => (
+  const ReplyCard = ({ reply, firstSlug, isOn }) => (
     <Card key={reply.id} className="mt-3 w-full max-w-2xl">
       <Link href={`/dashboard/${firstSlug}/${reply.id}`} passHref>
         <div className="relative w-full aspect-video">
