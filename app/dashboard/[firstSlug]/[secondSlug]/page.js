@@ -48,11 +48,14 @@ export default function SecondSlugPage() {
   const [essay, setEssay] = useState("");
   const [isEditing, setIsEditing] = useState(false);
 
-  // error info 
+  // previousPage & error 
+  const [previousPage, setPreviousPage] = useState("/dashboard");
   const [error, setError] = useState(null);
 
   // useEffect: 컴포넌트가 렌더링될 때 실행되는 react hook 
   useEffect(() => {
+    setPreviousPage(document.referrer);
+
     // onAuthStateChanged(auth, callback): 사용자의 로그인 상태 변경을 감지하는 firebase authentication의 이벤트 리스너 
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
 
@@ -164,6 +167,10 @@ export default function SecondSlugPage() {
         await updateDoc(userDocRef, { isPosted: !isPosted });  // firestore 업데이트
         
         setIsPosted((prev) => !prev); // isPosted 변수 업데이트 
+
+        if (isPosted) {
+          router.push(previousPage);
+        }
     } catch (error) {
         console.error("🔥 게시/게시 취소 중 오류 발생:", error);
     }
@@ -263,7 +270,7 @@ export default function SecondSlugPage() {
                 <h2 className="text-lg font-semibold font-nanum_pen">Essay</h2>
 
                 {/* 🔥 isOn이 true일 때 좋아요 버튼 표시 */}
-                {isOn && isPosted && (
+                {isOn && (
                   <button
                     className="flex items-center p-2 rounded-lg transition"
                     onClick={handleLike}
