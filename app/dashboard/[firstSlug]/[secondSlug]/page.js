@@ -169,6 +169,9 @@ export default function SecondSlugPage() {
         setIsPosted((prev) => !prev); // isPosted 변수 업데이트 
 
         if (isPosted) {
+          setIsPosted((prev) => !prev); // isPosted 변수 업데이트 
+        } else {
+          setIsPosted((prev) => !prev); // isPosted 변수 업데이트 
           router.push(`/dashboard/${firstSlug}`);
         }
     } catch (error) {
