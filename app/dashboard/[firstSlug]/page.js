@@ -360,6 +360,9 @@ export default function FirstSlugPage() {
   const handleReplyLike = async (commentId) => {
     if (!auth.currentUser) return;
   
+    console.log("🔥 좋아요 클릭됨! commentId:", commentId);
+    console.log("🔥 현재 allReplies 상태:", allReplies);
+
     const userId = auth.currentUser?.uid;
     const replyRef = doc(db, "gallery", firstSlug, "comment", commentId);
     const userLikeRef = doc(db, "gallery", firstSlug, "comment", commentId, "likes", userId);
@@ -368,7 +371,7 @@ export default function FirstSlugPage() {
       const targetReply = allReplies.find((reply) => reply.id === commentId);
 
       if (!targetReply) {
-        console.error("🔥 해당하는 댓글을 찾을 수 없습니다.");
+        console.error("🔥 해당하는 댓글을 찾을 수 없습니다. commentId: ", commentId);
         return;
       }
 
