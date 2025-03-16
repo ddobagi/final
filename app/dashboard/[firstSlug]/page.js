@@ -359,25 +359,23 @@ export default function FirstSlugPage() {
   // 🚗🌴 댓글의 좋아요를 관리하는 함수 
   const handleReplyLike = async (commentId) => {
     if (!auth.currentUser) return;
-  
-    console.log("🔥 좋아요 클릭됨! commentId:", commentId);
-    console.log("🔥 현재 allReplies 상태:", allReplies);
 
     const userId = auth.currentUser?.uid;
     const replyRef = doc(db, "gallery", firstSlug, "comment", commentId);
     const userLikeRef = doc(db, "gallery", firstSlug, "comment", commentId, "likes", userId);
   
     try {  
-      const targetReply = allReplies.find((reply) => reply.id === commentId);
-      console.log(allReplies);
+      const replyDoc = await getDoc(replyRef);
 
-      if (!targetReply) {
-        console.error("🔥 해당하는 댓글을 찾을 수 없습니다. commentId: ", commentId);
-        return;
-      }
+      const replyData = { id: replyDoc.id, ...replyDoc.data() };
 
-      const likeChange = targetReply.liked ? -1 : 1;
-
+      const likeChange = replyData.liked ? -1 : 1;
+  
+      await Promise.all([
+        updateDoc(replyRef, { recommend: increment(likeChange) }),
+        replyData.liked ? deleteDoc(userLikeRef) : setDoc(userLikeRef, { liked: true })
+      ]);
+      
       // UI를 변경 
       // prevAllReplies: Firestore에서 가져온, 기존 allReplies '배열'
       // reply: prevAllReplies 배열의 각 요소를 받는 변수. .map()을 사용하면, 배열의 각 요소를 자동으로 받음 
@@ -392,12 +390,6 @@ export default function FirstSlugPage() {
             : reply // reply.id !== commentId면 기존 값 그대로 반환 
         )
       );
-  
-      await Promise.all([
-        updateDoc(replyRef, { recommend: increment(likeChange) }),
-        targetReply.liked ? deleteDoc(userLikeRef) : setDoc(userLikeRef, { liked: true })
-      ]);
-
     } catch (error) {
       console.error("🔥 답글 좋아요 업데이트 실패:", error);
     }
