@@ -169,7 +169,7 @@ export default function SecondSlugPage() {
         setIsPosted((prev) => !prev); // isPosted 변수 업데이트 
 
         if (isPosted) {
-          router.push(previousPage);
+          router.push(`/dashboard/${firstSlug}`);
         }
     } catch (error) {
         console.error("🔥 게시/게시 취소 중 오류 발생:", error);
