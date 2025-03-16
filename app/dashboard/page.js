@@ -58,6 +58,7 @@ export default function DashboardPage() {
 
   // 🚗🌴 페이지가 렌더링 되었을 때, user&slug 정보를 바탕으로 fetchVideoData 함수를 실행하는 useEffect 
   useEffect(() => {
+    // onAuthStateChanged(auth, callback): 사용자의 로그인 상태 변경을 감지하는 firebase authentication의 이벤트 리스너 
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
         setUser(currentUser);
@@ -72,7 +73,6 @@ export default function DashboardPage() {
           setIsOn(mode);
 
           await fetchVideoData(mode);
-          console.log("fetchvideodata 실행되었음");
         } catch (error) {
           console.error("사용자 Mode 데이터를 가져오는 중 오류 발생:", error);
           await fetchVideoData(false);
@@ -108,29 +108,6 @@ export default function DashboardPage() {
       console.error("Firestore에서 비디오 데이터 가져오는 중 오류 발생:", error);
     }
   };
-
-  useEffect(() => {
-    function handleClickOutside(event) {
-
-      // 앞서 const fabRef = useRef(null); 로 정의
-      // useRef를 사용해 현재 사용자가 위치한(current) DOM 요소를 참조함 
-      // event.target: 사용자가 클릭한 요소 
-      // 사용자가 위치한 DOM요소가 사용자가 클릭한 요소를 포함하고 있지 않으면(사용자가 fab 버튼 외부를 클릭했으면)
-      // fabOpen 상태를 false, 즉 fab 버튼이 닫힌 상태로 설정 
-      if (fabRef.current && !fabRef.current.contains(event.target)) {
-        setFabOpen(false);
-      }
-    }
-
-    // "mousedown": 마우스 클릭을 감지하는 이벤트 리스너
-    // 마우스가 클릭되었을 때 handleClickOutside 함수를 실행함 (바로 위) 
-    document.addEventListener("mousedown", handleClickOutside);
-
-    // 이벤트 리스너를 해제하며 return 
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-
-  // 의존성 배열이 비어있음 -> 컴포넌트가 최초 렌더링(마운트) 될 때 한 번만 실행되고, 이후 실행되지 않음
-  }, []);
 
   // 🚗🌴 youtube url을 입력 받아, 각종 video 정보를 담은 객체로 반환하는 함수 
   const getYoutubeVideoDetails = async (url) => {
@@ -182,22 +159,22 @@ export default function DashboardPage() {
     }
   };
 
-
+  // 🚗🌴 Step 1. 입력창에 youtube url 입력하기 
   // e: 이벤트 객체, 이벤트 감지 
   const handleInputChange = async (e) => {
     // e.target: 이벤트가 발생한 요소, 여기서는 input 태그가 될 것 
     // e.target.value: 이벤트가 감지한 요소의 값, 여기서는 사용자가 입력한 youtube url이 될 것
     const url = e.target.value;
-    
+        
     // ...newVideo: 기존 newVideo 데이터를 복사해와 그대로 사용하되
-    // video 필드만 입력받은 url로 변경해 
-    // setNewVideo: newVideo 설정 , url만 바꾸면 youtube api가 나머지는 알아서 다 바꾸므로 
+    // video 필드만 입력받은 url로 변경 
+    // setNewVideo: newVideo 설정, url만 바꾸면 youtube api가 나머지는 알아서 다 바꿈  
     setNewVideo({ ...newVideo, video: url });
   };
 
-  // youtube url 입력 시 firebase에 저장 
+  // 🚗🌴 Step 2. 입력창에 입력한 youtube url을 이용해, dashboard에 영상 추가하기 
   const handleAddVideo = async () => {
-
+    // handleInputChange에서, video 필드의 값을 변경한 newVideo 변수 사용 
     if (!user || !newVideo.video) return;
 
     try {
@@ -209,7 +186,7 @@ export default function DashboardPage() {
       const userId = auth.currentUser.uid;
       const collectionPath = collection(db, "gallery"); 
 
-      // 설정한 db 경로로 video 정보 저장. 이때 youtube api로 불러온 video 정보뿐 아니라 recommend 필드도 추가 
+      // 설정한 db 경로로 video 정보 저장. 이때 youtube api로 불러온 영상 정보와 recommend 필드 추가  
       await addDoc(collectionPath, {
         ...videoDetails,
         userId: userId,
@@ -224,7 +201,30 @@ export default function DashboardPage() {
     }
   };
 
-  // 현재 토글 값을 db에 저장 
+
+  // 🚗🌴 Step 3. FAB 버튼 닫기  
+  useEffect(() => {
+    function handleClickOutside(event) {
+
+      // 앞서 const fabRef = useRef(null); 로 정의
+      // useRef를 사용해 현재 사용자가 위치한(current) DOM 요소를 참조함 
+      // event.target: 사용자가 클릭한 요소 
+      // 사용자가 위치한 DOM요소가 사용자가 클릭한 요소를 포함하고 있지 않으면(사용자가 fab 버튼 외부를 클릭했으면)
+      // fabOpen 상태를 false, 즉 fab 버튼이 닫힌 상태로 설정 
+      if (fabRef.current && !fabRef.current.contains(event.target)) {
+        setFabOpen(false);
+      }
+    }
+
+    // "mousedown": 마우스 클릭을 감지하는 이벤트 리스너
+    // 마우스가 클릭되었을 때 handleClickOutside 함수를 실행함 (바로 위) 
+    document.addEventListener("mousedown", handleClickOutside);
+
+    // 이벤트 리스너를 해제하며 return 
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+  
+  // 🚗🌴 사용자별로, 토글 스위치를 이용해 모드 전환 
   const handleToggleMode = async () => {
     if (!user) return;
   
@@ -235,9 +235,9 @@ export default function DashboardPage() {
     const newMode = isOn ? "private" : "public";  
   
     try {
-      // 설정한 db 경로에서, newMode 변수의 값을 Mode 필드에 저장 ("merge: true": 기존 데이터 유지)
+      // 모드를 newMode로 변경 ("merge: true": 기존 데이터 유지)
       await setDoc(userDocRef, { Mode: newMode }, { merge: true });
-      setIsOn(!isOn); // 토글 클릭 시 토글이 이동하도록 하기 위함 
+      setIsOn(!isOn); // isOn 변수의 값도 변경 
     } catch (error) {
       console.error("Firestore 모드 업데이트 오류:", error);
     }
@@ -267,6 +267,7 @@ export default function DashboardPage() {
     return email.split("@")[0];
   }
 
+  /// 🚜🚜🚜🚜🚜 HTML 🚜🚜🚜🚜🚜 ///
   return (
     <div className="rounded-lg shadow-lg max-w-2xl w-full flex flex-col p-6 relative mx-auto">
       <div className="flex items-center max-w-[600px] w-full h-10 space-x-2 justify-end">
