@@ -367,9 +367,11 @@ export default function FirstSlugPage() {
     const userLikeRef = doc(db, "gallery", firstSlug, "comment", commentId, "likes", userId);
     const userLikeDoc = await getDoc(userLikeRef);
     const userLikeData = { id: userLikeDoc.id, ...userLikeDoc.data() };
+    const replyDoc = await getDoc(replyRef);
+    const replyData = { id: replyDoc.id, ...replyDoc.data() };
 
     setReplyLiked(userLikeData.liked);
-    setReplyLikes(replyRef.likes);
+    setReplyLikes(replyData.likes);
   
     try {
       const likeChange = replyLiked ? -1 : 1;
