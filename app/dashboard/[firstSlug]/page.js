@@ -577,43 +577,6 @@ export default function FirstSlugPage() {
             </div>
           )}
 
-          {/* 🔥 작성 중이던 리스트 표시 */}
-          {sortedMyReplies.length > 0 && (
-            <div className="mt-4">
-              <h3 className="text-lg font-semibold">작성 중인 댓글 목록</h3>
-              {sortedMyReplies.map((reply) => (
-                <Card key={reply.id} className="mt-3 w-full max-w-2xl">
-                  <Link key={reply.id} href={`/dashboard/${firstSlug}/${reply.id}`} passHref>
-                    <div className="relative w-full aspect-video">
-                      <iframe
-                        className="w-full h-full rounded-t-lg"
-                        src={`https://www.youtube.com/embed/${reply.videoId}`}
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                      ></iframe>
-                    </div>
-                  </Link>
-                  <CardContent className="p-4">
-                    <Link key={reply.id} href={`/dashboard/${firstSlug}/${reply.id}`} passHref>
-                      <h3 className="text-lg font-bold mb-2">{reply.name}</h3>
-                      <div className="flex items-center justify-between w-full">
-                        <div className="flex items-center">
-                          <Image src={reply.channelProfile} alt="Channel Profile" width={40} height={40} className="rounded-full mr-3" />
-                          <span className="text-lg font-semibold">{reply.channel}</span>
-                        </div>
-                        <div className="flex items-center">
-                          <ThumbsUp className="w-5 h-5 text-gray-500 mr-1" />
-                          <span className="text-gray-600">{reply.likes}</span>
-                        </div>
-                      </div>
-                      <p className="text-sm text-gray-500 mt-2">{reply.views} views · {new Date(reply.publishedAt).toLocaleDateString()}</p>
-                    </Link>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-
           {/* 전체 댓글 & 작성 중인 댓글 목록 렌더링 (재사용 가능) */}
           {sortedMyReplies.length > 0 && <h3 className="text-lg font-semibold">작성 중인 댓글 목록</h3>}
           {sortedMyReplies.map((reply) => <ReplyCard key={reply.id} reply={reply} firstSlug={firstSlug} handleReplyLike={handleReplyLike} isOn={isOn} />)}
