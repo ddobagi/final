@@ -51,10 +51,6 @@ export default function SecondSlugPage() {
   // error info 
   const [error, setError] = useState(null);
 
-  // vercel 환경 변수로 저장해둔 youtube api key
-  // 반드시 "NEXT_PUBLIC_~"가 붙어야 함 
-  const API_KEY = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY;
-
   // useEffect: 컴포넌트가 렌더링될 때 실행되는 react hook 
   useEffect(() => {
     // onAuthStateChanged(auth, callback): 사용자의 로그인 상태 변경을 감지하는 firebase authentication의 이벤트 리스너 
@@ -267,7 +263,7 @@ export default function SecondSlugPage() {
                 <h2 className="text-lg font-semibold font-nanum_pen">Essay</h2>
 
                 {/* 🔥 isOn이 true일 때 좋아요 버튼 표시 */}
-                {isOn && (
+                {isOn && isPosted && (
                   <button
                     className="flex items-center p-2 rounded-lg transition"
                     onClick={handleLike}
