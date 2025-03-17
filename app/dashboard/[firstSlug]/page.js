@@ -41,7 +41,7 @@ export default function FirstSlugPage() {
 
   // video info 
   const [video, setVideo] = useState(null);
-  const [liked, setLiked] = useState(false);
+  const [mainLiked, setMainLiked] = useState(false);
   const [likes, setLikes] = useState(1);
   const [isPosted, setIsPosted] = useState(false);
 
@@ -59,6 +59,7 @@ export default function FirstSlugPage() {
   const [replyEssay, setReplyEssay] = useState(""); // 답글 에세이 내용
   const [allReplies, setAllReplies] = useState([]); // 전체 댓글 목록
   const [myReplies, setMyReplies] = useState([]); // 작성 중인 댓글 목록
+  const [replyLiked, setReplyLiked] = useState(false); 
 
   // vercel 환경 변수로 저장해둔 youtube api key
   // 반드시 "NEXT_PUBLIC_~"가 붙어야 함 
@@ -127,8 +128,8 @@ export default function FirstSlugPage() {
           getDocs(myRepliesQuery)
         ]);
 
-        // ✅ Firestore에서 likedByMe 데이터도 가져오기
-        const fetchLikedByMe = async (commentId) => {
+        // ✅ Firestore에서 replyLiked 데이터도 가져오기
+        const fetchReplyLiked = async (commentId) => {
           const userLikeRef = doc(db, "gallery", firstSlug, "comment", commentId, "likes", auth.currentUser.uid);
           const userLikeSnap = await getDoc(userLikeRef);
           return userLikeSnap.exists(); // 문서가 존재하면 true, 없으면 false 반환
@@ -137,13 +138,13 @@ export default function FirstSlugPage() {
         const mapReplies = async (snapshot) => {
           return Promise.all(snapshot.docs.map(async (doc) => {
             const data = doc.data();
-            const likedByMe = await fetchLikedByMe(doc.id);
+            const replyLiked = await fetchReplyLiked(doc.id);
             return {
               id: doc.id,
               ...data,
               likes: data.likes,
               recommend: data.recommend,
-              likedByMe: likedByMe
+              replyLiked: replyLiked
             };
           }));
         };
@@ -239,7 +240,7 @@ export default function FirstSlugPage() {
         // 만약 public 모드라면 
         if (mode) {
           setLikes(videoData.recommend || 0);
-          setLiked(userLikeSnap.exists());
+          setMainLiked(userLikeSnap.exists());
         }
 
     } catch (error) {
@@ -313,7 +314,6 @@ export default function FirstSlugPage() {
         user: userEmail,
         recommend: 0,
         isPosted: false,
-        likedByMe: false,
       });
   
       // 상태 업데이트 (입력 필드 초기화)
@@ -346,15 +346,15 @@ export default function FirstSlugPage() {
     const userLikeRef = doc(db, "gallery", firstSlug, "likes", userId); // gallery 컬렉션의, 현재 페이지의 slug에 해당하는 video의, 현재 user의 like 여부를 참조하는 경로 
   
     try {
-      const likeChange = liked ? -1 : 1;
+      const likeChange = mainLiked ? -1 : 1;
   
       // ✅ Firestore 작업 병렬 실행
       await Promise.all([
         updateDoc(docRef, { recommend: increment(likeChange) }),
-        liked ? deleteDoc(userLikeRef) : setDoc(userLikeRef, { liked: true })
+        mainLiked ? deleteDoc(userLikeRef) : setDoc(userLikeRef, { mainLiked: true })
       ]);
       
-      setLiked((prevLiked) => !prevLiked);
+      setMainLiked((prevMainLiked) => !prevMainLiked);
       setLikes((prevLikes) => prevLikes + likeChange);
     } catch (error) {
       console.error("좋아요 업데이트 실패:", error);
@@ -372,35 +372,34 @@ export default function FirstSlugPage() {
   
     try {
       const likeSnap = await getDoc(userLikeRef); // 현재 사용자가 좋아요를 눌렀는지 확인
-      const likedByMe = likeSnap.exists();
+      const replyLiked = likeSnap.exists();
 
       setAllReplies((prevAllReplies) =>
         prevAllReplies.map((reply) =>
           reply.id === commentId
             ? {
                 ...reply,
-                liked: !likeSnap.exists(), // 좋아요 상태 변경
-                likedByMe: !likedByMe,
+                replyLiked: !likeSnap.exists(), // 좋아요 상태 변경
                 recommend: reply.recommend + (likeSnap.exists() ? -1 : 1), // recommend 업데이트
               }
             : reply
         )
       );
   
-      if (likedByMe) {
+      if (replyLiked) {
         // 🔥 이미 좋아요를 눌렀다면 취소
         await updateDoc(replyRef, { 
           recommend: increment(-1),
-          likedByMe: false,
+          replyLiked: false,
         }); // Firestore에서 recommend 1 감소
         await deleteDoc(userLikeRef); // 현재 유저의 like 문서 삭제
       } else {
         // 🔥 좋아요 추가
         await updateDoc(replyRef, { 
           recommend: increment(1),
-          likedByMe: true,
+          replyLiked: true,
         }); // Firestore에서 recommend 1 증가
-        await setDoc(userLikeRef, { liked: true }); // 현재 유저의 like 문서 추가
+        await setDoc(userLikeRef, { replyLiked: true }); // 현재 유저의 like 문서 추가
       }
     } catch (error) {
       console.error("🔥 답글 좋아요 업데이트 실패:", error);
@@ -487,7 +486,7 @@ export default function FirstSlugPage() {
                     className="flex items-center p-2 rounded-lg transition"
                     onClick={handleLike}
                   >
-                    <Heart className="w-4 h-4 text-red-500 cursor-pointer" fill={liked ? "currentColor" : "none"} />
+                    <Heart className="w-4 h-4 text-red-500 cursor-pointer" fill={mainLiked ? "currentColor" : "none"} />
                     <span className="ml-2 text-lg font-semibold cursor-pointer">{likes}</span>
                   </button>
                 )}
@@ -642,7 +641,7 @@ export default function FirstSlugPage() {
                           >
                             <Heart
                               className="w-4 h-4 text-red-500 cursor-pointer"
-                              fill={ reply.likedByMe ? "currentColor" : "none"}
+                              fill={ replyLiked ? "currentColor" : "none"}
                             />
                             <span className="ml-2 text-lg font-semibold cursor-pointer">{reply.recommend}</span>
                           </button>
