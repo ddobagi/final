@@ -59,8 +59,6 @@ export default function FirstSlugPage() {
   const [replyEssay, setReplyEssay] = useState(""); // 답글 에세이 내용
   const [allReplies, setAllReplies] = useState([]); // 전체 댓글 목록
   const [myReplies, setMyReplies] = useState([]); // 작성 중인 댓글 목록
-  const [replyLiked, setReplyLiked] = useState(false);
-  const [replyLikes, setReplyLikes] = useState(1);
 
   // vercel 환경 변수로 저장해둔 youtube api key
   // 반드시 "NEXT_PUBLIC_~"가 붙어야 함 
@@ -311,6 +309,7 @@ export default function FirstSlugPage() {
         user: userEmail,
         recommend: 0,
         isPosted: false,
+        likedByMe: false,
       });
   
       // 상태 업데이트 (입력 필드 초기화)
