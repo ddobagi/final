@@ -486,7 +486,7 @@ export default function FirstSlugPage() {
                     className="flex items-center p-2 rounded-lg transition"
                     onClick={handleLike}
                   >
-                    <Heart className="w-4 h-4 text-red-500 cursor-pointer" fill={mainLiked ? "currentColor" : "none"} />
+                    <Heart className="w-4 h-4 text-red-500 cursor-pointer" fill={ mainLiked ? "currentColor" : "none"} />
                     <span className="ml-2 text-lg font-semibold cursor-pointer">{likes}</span>
                   </button>
                 )}
@@ -641,7 +641,7 @@ export default function FirstSlugPage() {
                           >
                             <Heart
                               className="w-4 h-4 text-red-500 cursor-pointer"
-                              fill={ replyLiked ? "currentColor" : "none"}
+                              fill={ reply.replyLiked ? "currentColor" : "none"}
                             />
                             <span className="ml-2 text-lg font-semibold cursor-pointer">{reply.recommend}</span>
                           </button>
