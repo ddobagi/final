@@ -634,7 +634,7 @@ export default function FirstSlugPage() {
                           >
                             <Heart
                               className="w-4 h-4 text-red-500 cursor-pointer"
-                              fill={ (reply.liked || reply.likedByMe) ? "currentColor" : "none"}
+                              fill={ (reply.liked || (!reply.liked && reply.likedByMe) ) ? "currentColor" : "none"}
                             />
                             <span className="ml-2 text-lg font-semibold cursor-pointer">{reply.recommend}</span>
                           </button>
