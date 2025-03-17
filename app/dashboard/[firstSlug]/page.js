@@ -372,26 +372,34 @@ export default function FirstSlugPage() {
   
     try {
       const likeSnap = await getDoc(userLikeRef); // 현재 사용자가 좋아요를 눌렀는지 확인
-  
+      const likedByMe = likeSnap.exists();
+
       setAllReplies((prevAllReplies) =>
         prevAllReplies.map((reply) =>
           reply.id === commentId
             ? {
                 ...reply,
                 liked: !likeSnap.exists(), // 좋아요 상태 변경
+                likedByMe: !likedByMe,
                 recommend: reply.recommend + (likeSnap.exists() ? -1 : 1), // recommend 업데이트
               }
             : reply
         )
       );
   
-      if (likeSnap.exists()) {
+      if (likedByMe) {
         // 🔥 이미 좋아요를 눌렀다면 취소
-        await updateDoc(replyRef, { recommend: increment(-1) }); // Firestore에서 recommend 1 감소
+        await updateDoc(replyRef, { 
+          recommend: increment(-1),
+          likedByMe: false,
+        }); // Firestore에서 recommend 1 감소
         await deleteDoc(userLikeRef); // 현재 유저의 like 문서 삭제
       } else {
         // 🔥 좋아요 추가
-        await updateDoc(replyRef, { recommend: increment(1) }); // Firestore에서 recommend 1 증가
+        await updateDoc(replyRef, { 
+          recommend: increment(1),
+          likedByMe: true,
+        }); // Firestore에서 recommend 1 증가
         await setDoc(userLikeRef, { liked: true }); // 현재 유저의 like 문서 추가
       }
     } catch (error) {
@@ -634,7 +642,7 @@ export default function FirstSlugPage() {
                           >
                             <Heart
                               className="w-4 h-4 text-red-500 cursor-pointer"
-                              fill={ (reply.liked || (!reply.liked && reply.likedByMe) ) ? "currentColor" : "none"}
+                              fill={ reply.likedByMe ? "currentColor" : "none"}
                             />
                             <span className="ml-2 text-lg font-semibold cursor-pointer">{reply.recommend}</span>
                           </button>
