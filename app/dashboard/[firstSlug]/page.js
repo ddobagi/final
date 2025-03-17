@@ -126,26 +126,30 @@ export default function FirstSlugPage() {
           getDocs(allRepliesQuery),
           getDocs(myRepliesQuery)
         ]);
-  
-        const allRepliesList = allRepliesSnapshot.docs.map(doc => {
-          const data = doc.data();
-          return {
-            id: doc.id,
-            ...data,
-            likes: data.likes,
-            recommend: data.recommend
-          };
-        });
 
-        const myRepliesList = myRepliesSnapshot.docs.map(doc => {
-          const data = doc.data();
-          return {
-            id: doc.id,
-            ...data,
-            likes: data.likes,
-            recommend: data.recommend
-          };
-        });
+        // ✅ Firestore에서 likedByMe 데이터도 가져오기
+        const fetchLikedByMe = async (commentId) => {
+          const userLikeRef = doc(db, "gallery", firstSlug, "comment", commentId, "likes", auth.currentUser.uid);
+          const userLikeSnap = await getDoc(userLikeRef);
+          return userLikeSnap.exists(); // 문서가 존재하면 true, 없으면 false 반환
+        };
+  
+        const mapReplies = async (snapshot) => {
+          return Promise.all(snapshot.docs.map(async (doc) => {
+            const data = doc.data();
+            const likedByMe = await fetchLikedByMe(doc.id);
+            return {
+              id: doc.id,
+              ...data,
+              likes: data.likes,
+              recommend: data.recommend,
+              likedByMe: likedByMe
+            };
+          }));
+        };
+
+        const allRepliesList = await mapReplies(allRepliesSnapshot);
+        const myRepliesList = await mapReplies(myRepliesSnapshot);
   
         setAllReplies(allRepliesList);
         setMyReplies(myRepliesList);
@@ -630,7 +634,7 @@ export default function FirstSlugPage() {
                           >
                             <Heart
                               className="w-4 h-4 text-red-500 cursor-pointer"
-                              fill={reply.liked ? "currentColor" : "none"}
+                              fill={ (reply.liked || reply.likedByMe) ? "currentColor" : "none"}
                             />
                             <span className="ml-2 text-lg font-semibold cursor-pointer">{reply.recommend}</span>
                           </button>
