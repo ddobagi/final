@@ -165,11 +165,9 @@ export default function SecondSlugPage() {
         const userDocRef = doc(db, "gallery", firstSlug, "comment", secondSlug); // db 경로 설정 
 
         await updateDoc(userDocRef, { isPosted: !isPosted });  // firestore 업데이트
-        
-        setIsPosted((prev) => !prev); // isPosted 변수 업데이트 
 
         if (isPosted) {
-          setIsPosted((prev) => !prev); // isPosted 변수 업데이트 
+          setIsPosted((prev) => !prev); // isPosted 변수 업데이트
         } else {
           setIsPosted((prev) => !prev); // isPosted 변수 업데이트 
           router.push(`/dashboard/${firstSlug}`);
