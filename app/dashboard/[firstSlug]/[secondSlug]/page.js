@@ -189,7 +189,7 @@ export default function SecondSlugPage() {
 
     try {
       const likeChange = liked ? -1 : 1;
-      const likedByme = !liked;
+      const likedByMe = !liked;
   
       // Firestore 쿼리 병렬 실행
       await Promise.all([
