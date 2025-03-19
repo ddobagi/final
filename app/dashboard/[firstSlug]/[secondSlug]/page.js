@@ -315,38 +315,42 @@ export default function SecondSlugPage() {
                   <Button onClick={handleTogglePost} className="bg-blue-500 text-white">
                     {isPosted ? "게시 취소" : "게시"}
                   </Button>
+
+
+                  {(userEmail == video.user) && (
+                    <button
+                      onClick={async () => {
+                        if (!video || !video.video) return alert("삭제할 비디오 데이터가 없습니다.");
+                        if (!user?.uid) return alert("사용자 정보가 없습니다.");
+
+                        try {
+                          const batch = writeBatch(db);
+
+                          const userVideosRef = collection(db, "gallery", firstSlug, "comment");
+                          const userQuery = query(userVideosRef, where("video", "==", video.video));
+                          const userQuerySnapshot = await getDocs(userQuery);
+
+                          userQuerySnapshot.forEach((doc) => {
+                            batch.delete(doc.ref); 
+                          });
+
+                          // 🔥 모든 삭제 작업 실행
+                          await batch.commit();
+
+                          alert("비디오가 삭제되었습니다.");
+                          router.push("/dashboard");
+                        } catch (error) {
+                          console.error("비디오 삭제 중 오류 발생: ", error);
+                          alert("삭제 중 오류가 발생했습니다.");
+                        }
+                      }}
+                      className="z-5 absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full shadow-md hover:bg-red-600"
+                    > 삭제
+                    </button>
+                  )}
+
+
                 </div>
-              )}
-              {(userEmail == video.user) && (
-                <button
-                  onClick={async () => {
-                    if (!video || !video.video) return alert("삭제할 비디오 데이터가 없습니다.");
-                    if (!user?.uid) return alert("사용자 정보가 없습니다.");
-
-                    try {
-                      const batch = writeBatch(db);
-
-                      const userVideosRef = collection(db, "gallery", firstSlug, "comment");
-                      const userQuery = query(userVideosRef, where("video", "==", video.video));
-                      const userQuerySnapshot = await getDocs(userQuery);
-
-                      userQuerySnapshot.forEach((doc) => {
-                        batch.delete(doc.ref); 
-                      });
-
-                      // 🔥 모든 삭제 작업 실행
-                      await batch.commit();
-
-                      alert("비디오가 삭제되었습니다.");
-                      router.push("/dashboard");
-                    } catch (error) {
-                      console.error("비디오 삭제 중 오류 발생: ", error);
-                      alert("삭제 중 오류가 발생했습니다.");
-                    }
-                  }}
-                  className="z-5 absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full shadow-md hover:bg-red-600"
-                > 삭제
-                </button>
               )}
             </div>
           </CardContent>
