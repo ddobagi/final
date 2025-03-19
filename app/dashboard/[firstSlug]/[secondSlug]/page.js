@@ -18,7 +18,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
 // lucide-react 
-import { Trash2, ThumbsUp, ArrowLeft, Heart } from "lucide-react";
+import { ThumbsUp, ArrowLeft, Heart } from "lucide-react";
 
 // export default: 다른 곳에서 import 할 수 있게 함
 // 다른 곳에서 import 할 수 있는 함수형 컴포넌트를 정의 

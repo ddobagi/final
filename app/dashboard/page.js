@@ -21,7 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 
 // lucide-react 
-import { Plus, X, Trash2, Search, ArrowLeft, Heart  } from "lucide-react";
+import { Plus, X, Search, ArrowLeft, Heart  } from "lucide-react";
 
 // export default: 다른 곳에서 import 할 수 있게 함 (ex. import Dashboard from "./Dashboard")
 // 다른 곳에서 import 할 수 있는 함수형 컴포넌트를 정의 
@@ -378,34 +378,6 @@ export default function DashboardPage() {
                   </div>
                 </Link>
               </CardContent>
-
-              {!isOn && (
-                <button
-                  onClick={async () => {
-                    if (!video || !video.video) return alert("삭제할 비디오 데이터가 없습니다.");
-                    if (!user?.uid) return alert("사용자 정보가 없습니다.");
-
-                    try {
-                      const batch = writeBatch(db);
-                      const galleryQuerySnapshot = await getDocs(
-                        query(collection(db, "gallery"), where("video", "==", video.video))
-                      );
-
-                      galleryQuerySnapshot.forEach((doc) => batch.delete(doc.ref)); // 🔥 gallery 문서 삭제
-                      await batch.commit(); // 🔥 모든 삭제 작업 실행
-
-                      alert("비디오가 삭제되었습니다.");
-                      router.push("/dashboard");
-                    } catch (error) {
-                      console.error("비디오 삭제 중 오류 발생: ", error);
-                      alert("삭제 중 오류가 발생했습니다.");
-                    }
-                  }}
-                  className="z-5 absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full shadow-md hover:bg-red-600"
-                >
-                  <Trash2 size={32} />
-                </button>
-              )}
             </Card>
           ))}
       </div>
