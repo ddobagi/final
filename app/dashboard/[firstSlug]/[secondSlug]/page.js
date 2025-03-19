@@ -40,7 +40,7 @@ export default function SecondSlugPage() {
 
   // video info 
   const [video, setVideo] = useState(null);
-  const [liked, setLiked] = useState(false);
+  const [replyLiked, setReplyLiked] = useState(false);
   const [likes, setLikes] = useState(1);
   const [isPosted, setIsPosted] = useState(false);
 
@@ -114,7 +114,7 @@ export default function SecondSlugPage() {
         setEssay(videoData.essay || "");
         setIsPosted(videoData.isPosted || false);
         setLikes(videoData.recommend || 0);
-        setLiked(userLikeSnap.exists());
+        setReplyLiked(userLikeSnap.exists());
     } catch (error) {
         console.error("fetchVideoDeta 함수 에러: ", error);
         setError(error.message);
@@ -186,20 +186,19 @@ export default function SecondSlugPage() {
     const userLikeRef = doc(db, "gallery", firstSlug, "comment", secondSlug, "likes", userId);
 
     try {
-      const likeChange = liked ? -1 : 1;
-      const likedByMe = !liked;
+      const likeChange = replyLiked ? -1 : 1;
+      const replyLiked = !replyLiked;
   
       // Firestore 쿼리 병렬 실행
       await Promise.all([
         updateDoc(docRef, {
           recommend: increment(likeChange),
-          likedByMe: likedByMe,
          }),
-        liked ? deleteDoc(userLikeRef) : setDoc(userLikeRef, { liked: true })
+        replyLiked ? deleteDoc(userLikeRef) : setDoc(userLikeRef, { replyLiked: true })
       ]);
   
       // 상태 변수 업데이트
-      setLiked((prevLiked) => !prevLiked);
+      setReplyLiked((prevReplyLiked) => !prevReplyLiked);
       setLikes((prevLikes) => prevLikes + likeChange);
   
     } catch (error) {
@@ -280,7 +279,7 @@ export default function SecondSlugPage() {
                     className="flex items-center p-2 rounded-lg transition"
                     onClick={handleLike}
                   >
-                    <Heart className="w-4 h-4 text-red-500 cursor-pointer" fill={liked ? "currentColor" : "none"} />
+                    <Heart className="w-4 h-4 text-red-500 cursor-pointer" fill={replyLiked ? "currentColor" : "none"} />
                     <span className="ml-2 text-lg font-semibold cursor-pointer">{likes}</span>
                   </button>
                 )}
@@ -318,9 +317,7 @@ export default function SecondSlugPage() {
                   </Button>
                 </div>
               )}
-            </div>
-          </CardContent>
-          {(userEmail == video.user) && (
+              {(userEmail == video.user) && (
                 <button
                   onClick={async () => {
                     if (!video || !video.video) return alert("삭제할 비디오 데이터가 없습니다.");
@@ -348,10 +345,12 @@ export default function SecondSlugPage() {
                     }
                   }}
                   className="z-5 absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full shadow-md hover:bg-red-600"
-                >
-                  <Trash2 size={32} />
+                > 삭제
                 </button>
               )}
+            </div>
+          </CardContent>
+          
         </Card>
       )}
     </div>
