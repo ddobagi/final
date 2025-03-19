@@ -529,7 +529,7 @@ export default function FirstSlugPage() {
                 </div>
                 <div className="flex mt-2 space-x-2 font-pretendard">
                   {!isOn && (
-                    <button
+                    <Button
                       onClick={async () => {
                         if (!video || !video.video) return alert("삭제할 비디오 데이터가 없습니다.");
 
@@ -551,7 +551,7 @@ export default function FirstSlugPage() {
                       }}
                       className="bg-red-500 text-white justify-start shadow-md cursor-pointer"
                     >삭제
-                    </button>
+                    </Button>
                   )}
                 </div>
               </div>
