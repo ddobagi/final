@@ -344,7 +344,7 @@ export default function SecondSlugPage() {
                           alert("삭제 중 오류가 발생했습니다.");
                         }
                       }}
-                      className="z-5 absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full shadow-md hover:bg-red-600"
+                      className="bg-red-500 text-white p-1 rounded-full shadow-md hover:bg-red-600"
                     > 삭제
                     </button>
                   )}
