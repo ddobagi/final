@@ -305,20 +305,6 @@ export default function SecondSlugPage() {
 
               {/* 🔥 isOn이 false일 때만 버튼 표시 */}
               <div className =" flex items-center justify-between ">
-                <div>
-                  {(userEmail == video.user) && (
-                    <div className="flex mt-2 space-x-2 font-pretendard justify-end">
-                      {isEditing ? (
-                        <Button onClick={handleSaveEssay}>저장</Button>
-                      ) : (
-                        <Button onClick={() => setIsEditing(true)}>수정</Button>
-                      )}
-                      <Button onClick={handleTogglePost} className="bg-blue-500 text-white">
-                        {isPosted ? "게시 취소" : "게시"}
-                      </Button>
-                    </div>
-                  )}
-                </div>
                 <div className="flex mt-2 space-x-2 font-pretendard">
                   {(userEmail == video.user) && (
                       <Button
@@ -350,6 +336,20 @@ export default function SecondSlugPage() {
                         className="bg-red-500 text-white cursor-pointer"
                       > 삭제
                       </Button>
+                  )}
+                </div>
+                <div>
+                  {(userEmail == video.user) && (
+                    <div className="flex mt-2 space-x-2 font-pretendard justify-end">
+                      {isEditing ? (
+                        <Button onClick={handleSaveEssay}>저장</Button>
+                      ) : (
+                        <Button onClick={() => setIsEditing(true)}>수정</Button>
+                      )}
+                      <Button onClick={handleTogglePost} className="bg-blue-500 text-white">
+                        {isPosted ? "게시 취소" : "게시"}
+                      </Button>
+                    </div>
                   )}
                 </div>
               </div>
