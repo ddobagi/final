@@ -187,18 +187,17 @@ export default function SecondSlugPage() {
 
     try {
       const likeChange = replyLiked ? -1 : 1;
-      const newReplyLiked = !replyLiked;
   
       // Firestore 쿼리 병렬 실행
       await Promise.all([
         updateDoc(docRef, {
           recommend: increment(likeChange),
          }),
-        newReplyLiked ? deleteDoc(userLikeRef) : setDoc(userLikeRef, { replyLiked: true })
+        replyLiked ? deleteDoc(userLikeRef) : setDoc(userLikeRef, { replyLiked: true })
       ]);
   
       // 상태 변수 업데이트
-      setReplyLiked(newReplyLiked);
+      setReplyLiked(!replyLiked);
       setLikes((prevLikes) => prevLikes + likeChange);
   
     } catch (error) {
