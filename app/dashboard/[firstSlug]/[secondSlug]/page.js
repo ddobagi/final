@@ -320,7 +320,7 @@ export default function SecondSlugPage() {
                     </div>
                   )}
                 </div>
-                <div>
+                <div className="flex mt-2 space-x-2 font-pretendard">
                   {(userEmail == video.user) && (
                       <button
                         onClick={async () => {
