@@ -305,56 +305,57 @@ export default function SecondSlugPage() {
               )}
 
               {/* 🔥 isOn이 false일 때만 버튼 표시 */}
-              { (userEmail == video.user) && (
-                <div className="flex mt-2 space-x-2 font-pretendard justify-end">
-                  {isEditing ? (
-                    <Button onClick={handleSaveEssay}>저장</Button>
-                  ) : (
-                    <Button onClick={() => setIsEditing(true)}>수정</Button>
-                  )}
-                  <Button onClick={handleTogglePost} className="bg-blue-500 text-white">
-                    {isPosted ? "게시 취소" : "게시"}
-                  </Button>
-
-
+              <div className =" flex items-center justify-between ">
+                <div>
                   {(userEmail == video.user) && (
-                    <button
-                      onClick={async () => {
-                        if (!video || !video.video) return alert("삭제할 비디오 데이터가 없습니다.");
-                        if (!user?.uid) return alert("사용자 정보가 없습니다.");
-
-                        try {
-                          const batch = writeBatch(db);
-
-                          const userVideosRef = collection(db, "gallery", firstSlug, "comment");
-                          const userQuery = query(userVideosRef, where("video", "==", video.video));
-                          const userQuerySnapshot = await getDocs(userQuery);
-
-                          userQuerySnapshot.forEach((doc) => {
-                            batch.delete(doc.ref); 
-                          });
-
-                          // 🔥 모든 삭제 작업 실행
-                          await batch.commit();
-
-                          alert("비디오가 삭제되었습니다.");
-                          router.push("/dashboard");
-                        } catch (error) {
-                          console.error("비디오 삭제 중 오류 발생: ", error);
-                          alert("삭제 중 오류가 발생했습니다.");
-                        }
-                      }}
-                      className="bg-red-500 text-white justify-start shadow-md cursor-pointer"
-                    > 삭제
-                    </button>
+                    <div className="flex mt-2 space-x-2 font-pretendard justify-end">
+                      {isEditing ? (
+                        <Button onClick={handleSaveEssay}>저장</Button>
+                      ) : (
+                        <Button onClick={() => setIsEditing(true)}>수정</Button>
+                      )}
+                      <Button onClick={handleTogglePost} className="bg-blue-500 text-white">
+                        {isPosted ? "게시 취소" : "게시"}
+                      </Button>
+                    </div>
                   )}
-
-
                 </div>
-              )}
+                <div>
+                  {(userEmail == video.user) && (
+                      <button
+                        onClick={async () => {
+                          if (!video || !video.video) return alert("삭제할 비디오 데이터가 없습니다.");
+                          if (!user?.uid) return alert("사용자 정보가 없습니다.");
+
+                          try {
+                            const batch = writeBatch(db);
+
+                            const userVideosRef = collection(db, "gallery", firstSlug, "comment");
+                            const userQuery = query(userVideosRef, where("video", "==", video.video));
+                            const userQuerySnapshot = await getDocs(userQuery);
+
+                            userQuerySnapshot.forEach((doc) => {
+                              batch.delete(doc.ref); 
+                            });
+
+                            // 🔥 모든 삭제 작업 실행
+                            await batch.commit();
+
+                            alert("비디오가 삭제되었습니다.");
+                            router.push("/dashboard");
+                          } catch (error) {
+                            console.error("비디오 삭제 중 오류 발생: ", error);
+                            alert("삭제 중 오류가 발생했습니다.");
+                          }
+                        }}
+                        className="bg-red-500 text-white justify-start shadow-md cursor-pointer"
+                      > 삭제
+                      </button>
+                  )}
+                </div>
+              </div>
             </div>
-          </CardContent>
-          
+          </CardContent> 
         </Card>
       )}
     </div>
